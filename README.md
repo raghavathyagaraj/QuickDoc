@@ -72,16 +72,7 @@ pip install -r requirements.txt
 python src/backend/app.py
 ```
 
----
 
-## 👥 Team Members
-
-| Name | Role |
-|------|------|
-| Raghava Thoganna | Management Team |
-| Yukta Chauhan | Finance Management |
-| Sreevidhi Mukkamala | Sales Team |
-| Priya Angel Dsouza | Advertising Management |
 
 ---
 
