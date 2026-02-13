@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickDoc - Your Health, Simplified</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0D9488;
+            --primary-dark: #0F766E;
+            --primary-light: #CCFBF1;
+            --dark: #111827;
+            --gray-900: #1F2937;
+            --gray-700: #374151;
+            --gray-600: #4B5563;
+            --gray-500: #6B7280;
+            --gray-400: #9CA3AF;
+            --gray-200: #E5E7EB;
+            --gray-100: #F3F4F6;
+            --gray-50: #F9FAFB;
+            --white: #FFFFFF;
+        }
+
+        /* Dark Mode Variables */
+        [data-theme="dark"] {
+            --dark: #F9FAFB;
+            --gray-900: #F3F4F6;
+            --gray-700: #E5E7EB;
+            --gray-600: #D1D5DB;
+            --gray-500: #9CA3AF;
+            --gray-400: #6B7280;
+            --gray-200: #374151;
+            --gray-100: #1F2937;
+            --gray-50: #111827;
+            --white: #0F172A;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--gray-900);
+            line-height: 1.6;
+            background: var(--white);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            background: var(--white);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--gray-200);
+            transition: background 0.3s;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--gray-600);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-buttons {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Dark Mode Toggle */
+        .theme-toggle {
+            background: var(--gray-100);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--gray-600);
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--gray-200);
+        }
+
+        .btn-login {
+            color: var(--gray-700);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .btn-outline:hover {
+            background: var(--gray-50);
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--gray-700);
+            cursor: pointer;
+        }
+
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--white);
+            z-index: 2000;
+            padding: 2rem;
+            flex-direction: column;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .mobile-menu.active {
+            transform: translateX(0);
+        }
+
+        .mobile-menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .mobile-menu-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--gray-700);
+            cursor: pointer;
+        }
+
+        .mobile-menu-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .mobile-menu-links a {
+            text-decoration: none;
+            color: var(--gray-700);
+            font-size: 1.25rem;
+            font-weight: 500;
+        }
+
+        /* Hero Section */
+        .hero {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            padding: 4rem 5%;
+            align-items: center;
+            background: var(--white);
+        }
+
+        .hero-content {
+            max-width: 560px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 0.375rem 1rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            color: var(--dark);
+            margin-bottom: 1.25rem;
+        }
+
+        /* Gradient Text */
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, var(--primary) 0%, #06B6D4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Typing Cursor */
+        .typing-cursor {
+            display: inline-block;
+            width: 3px;
+            height: 1em;
+            background: var(--primary);
+            margin-left: 5px;
+            animation: blink 1s infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+            line-height: 1.7;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .hero-buttons .btn {
+            padding: 0.875rem 1.5rem;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            display: flex;
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 0.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .search-input {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            flex: 1;
+            border-right: 1px solid var(--gray-200);
+            position: relative;
+        }
+
+        .search-input:last-of-type {
+            border-right: none;
+        }
+
+        .search-input i {
+            color: var(--gray-400);
+            font-size: 1rem;
+        }
+
+        .search-input input {
+            border: none;
+            outline: none;
+            font-size: 0.9rem;
+            width: 100%;
+            color: var(--gray-700);
+            background: transparent;
+        }
+
+        .search-input input::placeholder {
+            color: var(--gray-400);
+        }
+
+        /* Autocomplete Dropdown */
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 100;
+            margin-top: 0.5rem;
+        }
+
+        .autocomplete-dropdown.active {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: background 0.2s;
+        }
+
+        .autocomplete-item:hover {
+            background: var(--gray-50);
+        }
+
+        .autocomplete-item i {
+            color: var(--primary);
+        }
+
+        .search-bar .btn-search {
+            padding: 0.875rem 1.5rem;
+            border-radius: 8px;
+        }
+
+        /* Reviews Badge */
+        .reviews-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .avatar-group {
+            display: flex;
+        }
+
+        .avatar-group img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid white;
+            margin-left: -10px;
+            object-fit: cover;
+            background: var(--gray-200);
+            transition: transform 0.3s;
+        }
+
+        .avatar-group img:first-child {
+            margin-left: 0;
+        }
+
+        .avatar-group img:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        .reviews-text {
+            font-size: 0.85rem;
+            color: var(--gray-600);
+        }
+
+        .reviews-text span {
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        /* Hero Visual */
+        .hero-visual {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-image-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .hero-image {
+            width: 100%;
+            height: 450px;
+            background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .hero-image .doctors-img {
+            font-size: 15rem;
+            line-height: 1;
+        }
+
+        /* Glassmorphism Floating Cards */
+        .floating-card {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .floating-card.appointment {
+            top: 15%;
+            right: -10%;
+            animation-delay: 0s;
+        }
+
+        .floating-card.booking {
+            bottom: 20%;
+            right: -5%;
+            animation-delay: 1.5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .floating-card .icon-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .floating-card .icon-circle.green {
+            background: #D1FAE5;
+            color: #059669;
+        }
+
+        .floating-card .icon-circle.teal {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .floating-card .card-text h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .floating-card .card-text p {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 5rem 5%;
+            background: var(--gray-50);
+            text-align: center;
+        }
+
+        .section-label {
+            color: var(--primary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 0.75rem;
+        }
+
+        .section-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.75rem;
+        }
+
+        .section-subtitle {
+            font-size: 1rem;
+            color: var(--gray-500);
+            max-width: 500px;
+            margin: 0 auto 3rem;
+        }
+
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .step-card {
+            text-align: center;
+            padding: 1.5rem;
+            transition: transform 0.3s;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .step-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+        .step-card:hover .step-icon {
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.2);
+            transform: scale(1.05);
+        }
+
+        .step-icon i {
+            font-size: 1.75rem;
+            color: var(--primary);
+        }
+
+        .step-number {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .step-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .step-card p {
+            font-size: 0.9rem;
+            color: var(--gray-500);
+            line-height: 1.6;
+        }
+
+        /* Specialties Section */
+        .specialties {
+            padding: 5rem 5%;
+            background: var(--white);
+            text-align: center;
+        }
+
+        .specialties-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .specialty-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 16px;
+            padding: 1.75rem 1.5rem;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .specialty-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .specialty-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--gray-50);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+        }
+
+        .specialty-card:hover .specialty-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .specialty-card:nth-child(1) .specialty-icon { color: #EF4444; }
+        .specialty-card:nth-child(2) .specialty-icon { color: #F97316; }
+        .specialty-card:nth-child(3) .specialty-icon { color: #0D9488; }
+        .specialty-card:nth-child(4) .specialty-icon { color: #3B82F6; }
+        .specialty-card:nth-child(5) .specialty-icon { color: #8B5CF6; }
+        .specialty-card:nth-child(6) .specialty-icon { color: #EC4899; }
+        .specialty-card:nth-child(7) .specialty-icon { color: #10B981; }
+        .specialty-card:nth-child(8) .specialty-icon { color: #F43F5E; }
+
+        .specialty-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .specialty-card p {
+            font-size: 0.85rem;
+            color: var(--gray-500);
+        }
+
+        /* Stats Section */
+        .stats {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 4rem 5%;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 2rem 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .stat-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-item h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-item p {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Testimonials Section */
+        .testimonials {
+            padding: 5rem 5%;
+            background: var(--gray-50);
+            text-align: center;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .testimonial-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: left;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .quote-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-family: Georgia, serif;
+        }
+
+        .testimonial-card > p {
+            font-size: 0.95rem;
+            color: var(--gray-600);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .author-avatar {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--primary-light), var(--gray-200));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .author-info h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .author-info span {
+            font-size: 0.8rem;
+            color: var(--gray-500);
+        }
+
+        /* CTA Section */
+        .cta {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 5rem 5%;
+            text-align: center;
+        }
+
+        .cta h2 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .cta p {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.85);
+            max-width: 500px;
+            margin: 0 auto 2rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .cta .btn-white {
+            background: white;
+            color: var(--primary);
+            padding: 0.875rem 1.75rem;
+        }
+
+        .cta .btn-white:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta .btn-outline-white {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 0.875rem 1.75rem;
+        }
+
+        .cta .btn-outline-white:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .trust-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .trust-badge i {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Footer */
+        .footer {
+            background: #111827;
+            padding: 4rem 5% 2rem;
+            color: var(--gray-400);
+        }
+
+        [data-theme="dark"] .footer {
+            background: #0a0f1a;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 3rem;
+            max-width: 1200px;
+            margin: 0 auto 3rem;
+        }
+
+        .footer-brand .logo {
+            margin-bottom: 1rem;
+        }
+
+        .footer-brand .logo-text {
+            color: white;
+        }
+
+        .footer-brand p {
+            font-size: 0.9rem;
+            line-height: 1.7;
+            max-width: 280px;
+            color: #9CA3AF;
+        }
+
+        .footer-links h4 {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-links a {
+            color: #9CA3AF;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #374151;
+            padding-top: 2rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #9CA3AF;
+        }
+
+        /* Back to Top Button */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 999;
+            box-shadow: 0 5px 20px rgba(13, 148, 136, 0.4);
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            background: var(--primary-dark);
+            transform: translateY(-5px);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-content {
+                max-width: 100%;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .search-bar {
+                flex-direction: column;
+            }
+
+            .search-input {
+                border-right: none;
+                border-bottom: 1px solid var(--gray-200);
+            }
+
+            .reviews-badge {
+                justify-content: center;
+            }
+
+            .hero-visual {
+                display: none;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .mobile-menu {
+                display: flex;
+            }
+
+            .specialties-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .section-title {
+                font-size: 1.75rem;
+            }
+
+            .steps-container {
+                grid-template-columns: 1fr;
+            }
+
+            .specialties-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            .cta h2 {
+                font-size: 1.75rem;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .footer-brand p {
+                margin: 0 auto;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-header">
+            <a href="#" class="logo">
+                <div class="logo-icon"><i class="fas fa-plus"></i></div>
+                <span class="logo-text">QuickDoc</span>
+            </a>
+            <button class="mobile-menu-close" onclick="toggleMobileMenu()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <ul class="mobile-menu-links">
+            <li><a href="#" onclick="toggleMobileMenu()">Find Doctors</a></li>
+            <li><a href="#specialties" onclick="toggleMobileMenu()">Specialties</a></li>
+            <li><a href="#" onclick="toggleMobileMenu()">For Providers</a></li>
+            <li><a href="#" onclick="toggleMobileMenu()">About</a></li>
+            <li><a href="#" onclick="toggleMobileMenu()">Log In</a></li>
+            <li><a href="#" class="btn btn-primary" onclick="toggleMobileMenu()">Sign Up</a></li>
+        </ul>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="#" class="logo">
+            <div class="logo-icon"><i class="fas fa-plus"></i></div>
+            <span class="logo-text">QuickDoc</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#">Find Doctors</a></li>
+            <li><a href="#specialties">Specialties</a></li>
+            <li><a href="#">For Providers</a></li>
+            <li><a href="#">About</a></li>
+        </ul>
+        <div class="nav-buttons">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+                <i class="fas fa-moon" id="themeIcon"></i>
+            </button>
+            <a href="#" class="btn-login">Log In</a>
+            <a href="#" class="btn btn-primary">Sign Up</a>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge" data-aos="fade-down" data-aos-delay="100">
+                <i class="fas fa-check-circle"></i>
+                Trusted by 5,000+ Healthcare Providers
+            </div>
+            <h1 data-aos="fade-up" data-aos-delay="200">
+                Your Health,<br>
+                <span class="highlight" id="typingText"></span><span class="typing-cursor"></span>
+            </h1>
+            <p class="hero-subtitle" data-aos="fade-up" data-aos-delay="300">Find top-rated doctors, book appointments instantly, and take control of your healthcare journey — all in one place.</p>
+            
+            <div class="hero-buttons" data-aos="fade-up" data-aos-delay="400">
+                <a href="#" class="btn btn-primary">
+                    <i class="far fa-calendar-check"></i>
+                    Book an Appointment
+                </a>
+                <a href="#" class="btn btn-outline">
+                    <i class="fas fa-stethoscope"></i>
+                    Join as a Doctor
+                </a>
+            </div>
+
+            <div class="search-bar" data-aos="fade-up" data-aos-delay="500">
+                <div class="search-input">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Specialty or doctor name" id="searchInput" oninput="showAutocomplete()">
+                    <div class="autocomplete-dropdown" id="autocompleteDropdown">
+                        <div class="autocomplete-item" onclick="selectSpecialty('Cardiology')">
+                            <i class="fas fa-heartbeat"></i>
+                            <span>Cardiology</span>
+                        </div>
+                        <div class="autocomplete-item" onclick="selectSpecialty('Neurology')">
+                            <i class="fas fa-brain"></i>
+                            <span>Neurology</span>
+                        </div>
+                        <div class="autocomplete-item" onclick="selectSpecialty('Orthopedics')">
+                            <i class="fas fa-bone"></i>
+                            <span>Orthopedics</span>
+                        </div>
+                        <div class="autocomplete-item" onclick="selectSpecialty('Pediatrics')">
+                            <i class="fas fa-baby"></i>
+                            <span>Pediatrics</span>
+                        </div>
+                        <div class="autocomplete-item" onclick="selectSpecialty('Dentistry')">
+                            <i class="fas fa-tooth"></i>
+                            <span>Dentistry</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="search-input">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <input type="text" placeholder="City or Zip code">
+                </div>
+                <button class="btn btn-primary btn-search">
+                    Search <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <div class="reviews-badge" data-aos="fade-up" data-aos-delay="600">
+                <div class="avatar-group">
+                    <img src="https://i.pravatar.cc/100?img=1" alt="User">
+                    <img src="https://i.pravatar.cc/100?img=2" alt="User">
+                    <img src="https://i.pravatar.cc/100?img=3" alt="User">
+                </div>
+                <p class="reviews-text"><span>4.9</span> from 12,000+ reviews</p>
+            </div>
+        </div>
+
+        <div class="hero-visual" data-aos="fade-left" data-aos-delay="400">
+            <div class="hero-image-container">
+                <div class="hero-image">
+                    <div class="doctors-img">👨‍⚕️👩‍⚕️</div>
+                </div>
+                
+                <div class="floating-card appointment">
+                    <div class="icon-circle green">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="card-text">
+                        <h4>Appointment Confirmed</h4>
+                        <p>Dr. Sarah - 2:30 PM</p>
+                    </div>
+                </div>
+
+                <div class="floating-card booking">
+                    <div class="icon-circle teal">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="card-text">
+                        <h4>24/7 Booking</h4>
+                        <p>Anytime, anywhere</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works" id="how-it-works">
+        <p class="section-label" data-aos="fade-up">HOW IT WORKS</p>
+        <h2 class="section-title" data-aos="fade-up" data-aos-delay="100">Three simple steps to <span style="color: var(--primary)">better care</span></h2>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">No phone calls, no waiting. Book your next appointment in under 60 seconds.</p>
+
+        <div class="steps-container">
+            <div class="step-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="step-icon">
+                    <i class="fas fa-search"></i>
+                    <span class="step-number">01</span>
+                </div>
+                <h3>Find Your Doctor</h3>
+                <p>Search by specialty, location, or doctor name. View profiles, ratings, and real patient reviews.</p>
+            </div>
+
+            <div class="step-card" data-aos="fade-up" data-aos-delay="400">
+                <div class="step-icon">
+                    <i class="far fa-calendar-check"></i>
+                    <span class="step-number">02</span>
+                </div>
+                <h3>Book Instantly</h3>
+                <p>Pick a convenient time slot from real-time availability. Get instant confirmation and reminders.</p>
+            </div>
+
+            <div class="step-card" data-aos="fade-up" data-aos-delay="500">
+                <div class="step-icon">
+                    <i class="fas fa-star"></i>
+                    <span class="step-number">03</span>
+                </div>
+                <h3>Visit & Review</h3>
+                <p>Attend your appointment with confidence. Share your experience to help other patients.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Specialties Section -->
+    <section class="specialties" id="specialties">
+        <p class="section-label" data-aos="fade-up">SPECIALTIES</p>
+        <h2 class="section-title" data-aos="fade-up" data-aos-delay="100">Browse by specialty</h2>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">Find the right specialist for your needs from our network of certified professionals.</p>
+
+        <div class="specialties-grid">
+            <div class="specialty-card" data-aos="zoom-in" data-aos-delay="100">
+                <div class="specialty-icon"><i class="fas fa-heartbeat"></i></div>
+                <h3>Cardiology</h3>
+                <p>240+ doctors</p>
+            </div>
+
+            <div class="specialty-card" data-aos="zoom-in" data-aos-delay="150">
+                <div class="specialty-icon"><i class="fas fa-brain"></i></div>
+                <h3>Neurology</h3>
+                <p>185+ doctors</p>
+            </div>
+
+            <div class="specialty-card" data-aos="zoom-in" data-aos-delay="200">
+                <div class="specialty-icon"><i class="fas fa-bone"></i></div>
+                <h3>Orthopedics</h3>
+                <p>310+ doctors</p>
+            </div>
+
+            <div class="specialty-card" data-aos="zoom-in" data-aos-delay="250">
+                <div class="specialty-icon"><i class="fas fa-eye"></i></div>
+                <h3>Ophthalmology</h3>
+                <p>168+ doctors</p>
+            </div>
+
+            <div class="specialty-card" data-aos="zoom-in" data-aos-delay="300">
+                <div class="specialty-icon"><i class="fas fa-baby"></i></div>
+                <h3>Pediatrics</h3>
+                <p>290+ doctors</p>
+            </div>
+
+            <div class="specialty-card" data-aos="zoom-in" data-aos-delay="350">
+                <div class="specialty-icon"><i class="fas fa-ribbon"></i></div>
+                <h3>Oncology</h3>
+                <p>210+ doctors</p>
+            </div>
+
+            <div class="specialty-card" data-aos="zoom-in" data-aos-delay="400">
+                <div class="specialty-icon"><i class="fas fa-user-md"></i></div>
+                <h3>General Physician</h3>
+                <p>450+ doctors</p>
+            </div>
+
+            <div class="specialty-card" data-aos="zoom-in" data-aos-delay="450">
+                <div class="specialty-icon"><i class="fas fa-tooth"></i></div>
+                <h3>Dentistry</h3>
+                <p>320+ doctors</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats" id="stats">
+        <div class="stats-container">
+            <div class="stat-item" data-aos="fade-up" data-aos-delay="100">
+                <h3><span class="counter" data-target="5000">0</span>+</h3>
+                <p>Verified Doctors<br>Across all specialties</p>
+            </div>
+            <div class="stat-item" data-aos="fade-up" data-aos-delay="200">
+                <h3><span class="counter" data-target="120">0</span>K+</h3>
+                <p>Patients Served<br>And growing every day</p>
+            </div>
+            <div class="stat-item" data-aos="fade-up" data-aos-delay="300">
+                <h3><span class="counter" data-target="98">0</span>%</h3>
+                <p>Satisfaction Rate<br>From patient reviews</p>
+            </div>
+            <div class="stat-item" data-aos="fade-up" data-aos-delay="400">
+                <h3>24/7</h3>
+                <p>Availability<br>Book anytime, anywhere</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials" id="testimonials">
+        <p class="section-label" data-aos="fade-up">TESTIMONIALS</p>
+        <h2 class="section-title" data-aos="fade-up" data-aos-delay="100">Loved by patients & doctors</h2>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200" style="margin-bottom: 3rem;">See what our community has to say about their experience.</p>
+
+        <div class="testimonials-grid">
+            <div class="testimonial-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="quote-icon">❝</div>
+                <p>QuickDoc made finding a specialist incredibly easy. I booked a cardiologist in under a minute and received a reminder the day before. Truly life-changing!</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">👩</div>
+                    <div class="author-info">
+                        <h4>Emily Rodriguez</h4>
+                        <span>Patient</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testimonial-card" data-aos="fade-up" data-aos-delay="400">
+                <div class="quote-icon">❝</div>
+                <p>As a doctor, QuickDoc has streamlined my practice. My schedule is organized, no-shows dropped by 40%, and I can focus on what matters – my patients.</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">👨‍⚕️</div>
+                    <div class="author-info">
+                        <h4>Dr. James Chen</h4>
+                        <span>Cardiologist</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testimonial-card" data-aos="fade-up" data-aos-delay="500">
+                <div class="quote-icon">❝</div>
+                <p>I love being able to see reviews from other patients before booking. It gives me confidence in choosing the right doctor for my family.</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">👩</div>
+                    <div class="author-info">
+                        <h4>Sarah Thompson</h4>
+                        <span>Patient</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta" id="cta">
+        <h2 data-aos="fade-up">Ready to take control of<br>your <span style="text-decoration: underline;">healthcare</span>?</h2>
+        <p data-aos="fade-up" data-aos-delay="100">Join thousands of patients and healthcare providers who trust QuickDoc for seamless appointment management.</p>
+        
+        <div class="cta-buttons" data-aos="fade-up" data-aos-delay="200">
+            <a href="#" class="btn btn-white">
+                <i class="far fa-calendar-check"></i>
+                Book an Appointment
+            </a>
+            <a href="#" class="btn btn-outline-white">
+                <i class="fas fa-stethoscope"></i>
+                Join as a Doctor
+            </a>
+        </div>
+
+        <div class="trust-badges" data-aos="fade-up" data-aos-delay="300">
+            <div class="trust-badge">
+                <i class="fas fa-shield-alt"></i>
+                HIPAA Compliant
+            </div>
+            <div class="trust-badge">
+                <i class="fas fa-lock"></i>
+                SSL Encrypted
+            </div>
+            <div class="trust-badge">
+                <i class="fas fa-certificate"></i>
+                SOC 2 Certified
+            </div>
+            <div class="trust-badge">
+                <i class="fas fa-server"></i>
+                99.9% Uptime
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <a href="#" class="logo">
+                    <div class="logo-icon"><i class="fas fa-plus"></i></div>
+                    <span class="logo-text">QuickDoc</span>
+                </a>
+                <p>Connecting patients with top-rated doctors. Book appointments instantly, 24/7.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="#">Find a Doctor</a></li>
+                    <li><a href="#">Book Appointment</a></li>
+                    <li><a href="#">Specialties</a></li>
+                    <li><a href="#">Pricing</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-links">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Press</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-links">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Patient Guide</a></li>
+                    <li><a href="#">API Docs</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-links">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Cookie Policy</a></li>
+                    <li><a href="#">HIPAA</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2024 QuickDoc. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" onclick="scrollToTop()">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- AOS Animation Library -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <script>
+        // Initialize AOS (Animate On Scroll)
+        AOS.init({
+            duration: 800,
+            easing: 'ease-out',
+            once: true,
+            offset: 100
+        });
+
+        // Typing Effect
+        const typingText = document.getElementById('typingText');
+        const textToType = 'Simplified';
+        let charIndex = 0;
+
+        function typeText() {
+            if (charIndex < textToType.length) {
+                typingText.textContent += textToType.charAt(charIndex);
+                charIndex++;
+                setTimeout(typeText, 100);
+            }
+        }
+
+        // Start typing after page loads
+        setTimeout(typeText, 1000);
+
+        // Counter Animation
+        function animateCounters() {
+            const counters = document.querySelectorAll('.counter');
+            
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const duration = 2000; // 2 seconds
+                const step = target / (duration / 16);
+                let current = 0;
+
+                const updateCounter = () => {
+                    current += step;
+                    if (current < target) {
+                        counter.textContent = Math.floor(current).toLocaleString();
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        counter.textContent = target.toLocaleString();
+                    }
+                };
+
+                updateCounter();
+            });
+        }
+
+        // Trigger counter animation when stats section is visible
+        const statsSection = document.getElementById('stats');
+        let counterAnimated = false;
+
+        const observerOptions = {
+            threshold: 0.5
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !counterAnimated) {
+                    animateCounters();
+                    counterAnimated = true;
+                }
+            });
+        }, observerOptions);
+
+        observer.observe(statsSection);
+
+        // Dark Mode Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+            document.getElementById('themeIcon').classList.remove('fa-moon');
+            document.getElementById('themeIcon').classList.add('fa-sun');
+        }
+
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('active');
+        }
+
+        // Autocomplete Search
+        function showAutocomplete() {
+            const input = document.getElementById('searchInput');
+            const dropdown = document.getElementById('autocompleteDropdown');
+            
+            if (input.value.length > 0) {
+                dropdown.classList.add('active');
+            } else {
+                dropdown.classList.remove('active');
+            }
+        }
+
+        function selectSpecialty(specialty) {
+            document.getElementById('searchInput').value = specialty;
+            document.getElementById('autocompleteDropdown').classList.remove('active');
+        }
+
+        // Close autocomplete when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-input')) {
+                document.getElementById('autocompleteDropdown').classList.remove('active');
+            }
+        });
+
+        // Back to Top Button
+        const backToTopBtn = document.getElementById('backToTop');
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 500) {
+                backToTopBtn.classList.add('visible');
+            } else {
+                backToTopBtn.classList.remove('visible');
+            }
+        });
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        // Smooth scroll for nav links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
