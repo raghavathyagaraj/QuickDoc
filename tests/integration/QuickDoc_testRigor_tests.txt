@@ -1,0 +1,69 @@
+# QuickDoc - testRigor Test Suite
+# Dummy test script for Jenkins Pipeline Integration
+# Course: CS691 Capstone Project - Team 4
+
+# Test Case 1: Verify Homepage Loads
+test "Homepage loads successfully"
+    open url "https://raghavathyagaraj.github.io/QuickDoc/src/frontend/templates/index.html"
+    check that page contains "QuickDoc"
+    check that page contains "Your Health"
+    check that page contains "Simplified"
+
+# Test Case 2: Verify Navigation Links Exist
+test "Navigation links are present"
+    check that page contains "Find Doctors"
+    check that page contains "Specialties"
+    check that page contains "For Providers"
+    check that page contains "About"
+
+# Test Case 3: Verify Call-to-Action Buttons
+test "CTA buttons are visible"
+    check that page contains "Book an Appointment"
+    check that page contains "Sign Up"
+    check that page contains "Log In"
+
+# Test Case 4: Verify Search Bar Exists
+test "Search functionality is present"
+    check that page contains "Specialty or doctor name"
+    check that page contains "City or Zip code"
+    check that page contains "Search"
+
+# Test Case 5: Verify Specialties Section
+test "Specialties section displays correctly"
+    scroll down
+    check that page contains "Browse by specialty"
+    check that page contains "Cardiology"
+    check that page contains "Neurology"
+    check that page contains "Pediatrics"
+    check that page contains "Dentistry"
+
+# Test Case 6: Verify Stats Section
+test "Stats section displays correctly"
+    check that page contains "5,000+"
+    check that page contains "120K+"
+    check that page contains "98%"
+    check that page contains "24/7"
+
+# Test Case 7: Verify Testimonials Section
+test "Testimonials section displays correctly"
+    check that page contains "Loved by patients & doctors"
+    check that page contains "Emily Rodriguez"
+    check that page contains "Dr. James Chen"
+
+# Test Case 8: Verify Footer Links
+test "Footer contains required links"
+    scroll to bottom
+    check that page contains "Privacy Policy"
+    check that page contains "Terms of Service"
+    check that page contains "HIPAA"
+
+# Test Case 9: Verify Mobile Responsiveness (simulated)
+test "Page elements are responsive"
+    check that page contains "QuickDoc"
+    check that button "Sign Up" is visible
+
+# Test Case 10: Verify Trust Badges
+test "Trust badges are displayed"
+    check that page contains "HIPAA Compliant"
+    check that page contains "SSL Encrypted"
+    check that page contains "SOC 2 Certified"
