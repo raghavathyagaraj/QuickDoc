@@ -1,7 +1,7 @@
 pipeline {
     agent any
+    
     stages {
-
         // Stage 1: Checkout Code
         stage('Checkout') {
             steps {
@@ -64,52 +64,58 @@ pipeline {
         // Stage 6: TestRigor Integration Tests
         stage('testRigor Integration Tests') {
             steps {
+                // Ensure the credential ID matches 'test_rigor_secret' created as 'Secret text'
                 withCredentials([string(credentialsId: 'test_rigor_secret', variable: 'API_KEY')]) {
                     script {
                         echo '=========================================='
                         echo 'Running TestRigor Integration Tests'
                         echo '=========================================='
 
-                        // 1. Trigger TestRigor test suite (Fixed interpolation & security)
-                        def response = sh(script: '''
-                            curl -s -X POST "https://api.testrigor.com/api/v1/run" \
-                            -H "Authorization: Bearer $API_KEY" \
-                            -H "Content-Type: application/json" \
-                            -d '{ "testSuiteName": "QuickDoc Homepage real test" }'
-                        ''', returnStdout: true).trim()
+                        // 1. Trigger the retest for App ID: Hs5GePpDbaANXBnRy
+                        // Note: auth-token header is used instead of Bearer token
+                        sh(script: '''
+                            curl -s -X POST "https://api.testrigor.com/api/v1/apps/Hs5GePpDbaANXBnRy/retest" \
+                            -H "Content-type: application/json" \
+                            -H "auth-token: $API_KEY" \
+                            -d '{"forceCancelPreviousTesting":true}'
+                        ''')
 
-                        echo "API Response: ${response}"
+                        // 2. Poll for status using HTTP codes
+                        def finished = false
+                        
+                        while (!finished) {
+                            echo "Checking test status..."
+                            
+                            // Using curl to get ONLY the HTTP status code for reliability
+                            def statusCode = sh(script: """
+                                curl -s -o /dev/null -w "%{http_code}" \
+                                -H "auth-token: \$API_KEY" \
+                                "https://api.testrigor.com/api/v1/apps/Hs5GePpDbaANXBnRy/status"
+                            """, returnStdout: true).trim()
 
-                        // 2. Extract runId with a check to prevent jq parse errors
-                        if (!response || response.contains("error")) {
-                            error "Failed to trigger TestRigor: ${response}"
+                            echo "Current Test Status Code: ${statusCode}"
+
+                            switch(statusCode) {
+                                case "200":
+                                    echo "Test finished successfully!"
+                                    finished = true
+                                    break
+                                case "227":
+                                case "228":
+                                    echo "Test is still New or In progress. Waiting 20 seconds..."
+                                    sleep 20
+                                    break
+                                case "230":
+                                    error "Test finished but FAILED."
+                                    break
+                                case "229":
+                                    error "Test was CANCELED."
+                                    break
+                                default:
+                                    error "Received unexpected status code: ${statusCode}"
+                            }
                         }
                         
-                        def runId = sh(script: "echo '${response}' | jq -r '.runId'", returnStdout: true).trim()
-                        echo "Triggered TestRigor run with ID: ${runId}"
-
-                        // 3. Poll for test completion
-                        def status = "running"
-                        def statusResp = ""
-                        
-                        while(status == "running" || status == "new") {
-                            echo "Waiting for tests... (Status: ${status})"
-                            sleep 15
-                            statusResp = sh(script: "curl -s -X GET https://api.testrigor.com/api/v1/run/${runId} -H 'Authorization: Bearer \$API_KEY'", returnStdout: true).trim()
-                            status = sh(script: "echo '${statusResp}' | jq -r '.status'", returnStdout: true).trim()
-                        }
-
-                        // 4. Download test report
-                        sh "curl -s -X GET https://api.testrigor.com/api/v1/run/${runId}/report -H 'Authorization: Bearer \$API_KEY' -o TestRigor_Report_${runId}.json"
-
-                        // 5. Check result and fail build if tests failed
-                        def result = sh(script: "echo '${statusResp}' | jq -r '.result'", returnStdout: true).trim()
-                        echo "TestRigor Result: ${result}"
-                        
-                        if(result != "passed") {
-                            error "TestRigor tests failed with result: ${result}"
-                        }
-
                         echo 'TestRigor Integration Tests completed successfully.'
                     }
                 }
