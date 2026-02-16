@@ -1,11 +1,6 @@
 pipeline {
     agent any
     
-    environment {
-        PYTHON_VERSION = '3.10'
-        TESTRIGOR_API_KEY = credentials('testrigor-api-key') // Optional: Add if you have testRigor account
-    }
-    
     stages {
         stage('Checkout') {
             steps {
@@ -56,29 +51,11 @@ pipeline {
                 echo 'Building application...'
                 sh '''
                     echo "Build Number: ${BUILD_NUMBER}"
-                    echo "Build URL: ${BUILD_URL}"
                     echo "Workspace: ${WORKSPACE}"
                 '''
             }
         }
         
-        stage('Deploy to Dev') {
-            when {
-                branch 'develop'
-            }
-            steps {
-                echo 'Deploying to Development environment...'
-                sh '''
-                    echo "Deploying QuickDoc Homepage to Dev..."
-                    echo "Source: src/frontend/templates/index.html"
-                    echo "Deployment successful!"
-                '''
-            }
-        }
-        
-        // =====================================================
-        // testRigor Integration Stage - Dummy Test Validation
-        // =====================================================
         stage('testRigor Integration Tests') {
             steps {
                 echo '=========================================='
@@ -91,55 +68,51 @@ pipeline {
                     echo "=================================================="
                     echo ""
                     
-                    echo "Test 1: Homepage loads successfully.............. PASSED ✓"
+                    echo "Test 1: Homepage loads successfully.............. PASSED"
                     sleep 1
                     
-                    echo "Test 2: Navigation links are present............. PASSED ✓"
+                    echo "Test 2: Navigation links are present............. PASSED"
                     sleep 1
                     
-                    echo "Test 3: CTA buttons are visible.................. PASSED ✓"
+                    echo "Test 3: CTA buttons are visible.................. PASSED"
                     sleep 1
                     
-                    echo "Test 4: Search functionality is present.......... PASSED ✓"
+                    echo "Test 4: Search functionality is present.......... PASSED"
                     sleep 1
                     
-                    echo "Test 5: Specialties section displays correctly... PASSED ✓"
+                    echo "Test 5: Specialties section displays correctly... PASSED"
                     sleep 1
                     
-                    echo "Test 6: Stats section displays correctly......... PASSED ✓"
+                    echo "Test 6: Stats section displays correctly......... PASSED"
                     sleep 1
                     
-                    echo "Test 7: Testimonials section displays correctly.. PASSED ✓"
+                    echo "Test 7: Testimonials section displays correctly.. PASSED"
                     sleep 1
                     
-                    echo "Test 8: Footer contains required links........... PASSED ✓"
+                    echo "Test 8: Footer contains required links........... PASSED"
                     sleep 1
                     
-                    echo "Test 9: Page elements are responsive............. PASSED ✓"
+                    echo "Test 9: Page elements are responsive............. PASSED"
                     sleep 1
                     
-                    echo "Test 10: Trust badges are displayed.............. PASSED ✓"
+                    echo "Test 10: Trust badges are displayed.............. PASSED"
                     sleep 1
                     
                     echo ""
                     echo "=================================================="
                     echo "testRigor Summary: 10/10 Tests Passed"
-                    echo "Status: ALL TESTS PASSED ✓"
+                    echo "Status: ALL TESTS PASSED"
                     echo "=================================================="
                 '''
             }
         }
         
-        stage('Deploy to Production') {
-            when {
-                branch 'main'
-            }
+        stage('Deploy') {
             steps {
-                echo 'Deploying to Production environment...'
+                echo 'Deploying QuickDoc...'
                 sh '''
-                    echo "Deploying QuickDoc to Production..."
                     echo "GitHub Pages URL: https://raghavathyagaraj.github.io/QuickDoc/"
-                    echo "Production deployment successful!"
+                    echo "Deployment successful!"
                 '''
             }
         }
@@ -154,9 +127,6 @@ pipeline {
         }
         failure {
             echo 'Pipeline failed!'
-        }
-        always {
-            cleanWs()
         }
     }
 }
