@@ -76,7 +76,7 @@ pipeline {
         // -------------------------
         stage('testRigor Integration Tests') {
             steps {
-                withCredentials([string(credentialsId: 'c68471c1-192e-457e-a308-e007efafcf42', variable: 'API_KEY')]) {
+                withCredentials([string(credentialsId: 'test_rigor_secret', variable: 'API_KEY')]) {
                     script {
                         echo '=========================================='
                         echo 'Running TestRigor Integration Tests'
