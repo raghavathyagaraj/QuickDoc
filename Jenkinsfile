@@ -2,9 +2,7 @@ pipeline {
     agent any
     stages {
 
-        // -------------------------
         // Stage 1: Checkout Code
-        // -------------------------
         stage('Checkout') {
             steps {
                 checkout scm
@@ -12,9 +10,7 @@ pipeline {
             }
         }
 
-        // -------------------------
         // Stage 2: Setup Python Environment
-        // -------------------------
         stage('Setup Environment') {
             steps {
                 sh '''
@@ -27,9 +23,7 @@ pipeline {
             }
         }
 
-        // -------------------------
         // Stage 3: Run Unit Tests
-        // -------------------------
         stage('Run Unit Tests') {
             steps {
                 sh '''
@@ -44,9 +38,7 @@ pipeline {
             }
         }
 
-        // -------------------------
         // Stage 4: Code Quality Check
-        // -------------------------
         stage('Code Quality Check') {
             steps {
                 sh '''
@@ -58,9 +50,7 @@ pipeline {
             }
         }
 
-        // -------------------------
         // Stage 5: Build
-        // -------------------------
         stage('Build') {
             steps {
                 echo 'Building application...'
@@ -71,9 +61,7 @@ pipeline {
             }
         }
 
-        // -------------------------
         // Stage 6: TestRigor Integration Tests
-        // -------------------------
         stage('testRigor Integration Tests') {
             steps {
                 withCredentials([string(credentialsId: 'test_rigor_secret', variable: 'API_KEY')]) {
@@ -82,35 +70,44 @@ pipeline {
                         echo 'Running TestRigor Integration Tests'
                         echo '=========================================='
 
-                        // Trigger TestRigor test suite
-                        def response = sh(script: """
-                            curl -s -X POST "https://api.testrigor.com/api/v1/run" \\
-                            -H "Authorization: Bearer $API_KEY" \\
-                            -H "Content-Type: application/json" \\
+                        // 1. Trigger TestRigor test suite (Fixed interpolation & security)
+                        def response = sh(script: '''
+                            curl -s -X POST "https://api.testrigor.com/api/v1/run" \
+                            -H "Authorization: Bearer $API_KEY" \
+                            -H "Content-Type: application/json" \
                             -d '{ "testSuiteName": "QuickDoc Homepage real test" }'
-                        """, returnStdout: true).trim()
+                        ''', returnStdout: true).trim()
 
-                        // Extract runId
-                        def runId = sh(script: "echo $response | jq -r '.runId'", returnStdout: true).trim()
+                        echo "API Response: ${response}"
+
+                        // 2. Extract runId with a check to prevent jq parse errors
+                        if (!response || response.contains("error")) {
+                            error "Failed to trigger TestRigor: ${response}"
+                        }
+                        
+                        def runId = sh(script: "echo '${response}' | jq -r '.runId'", returnStdout: true).trim()
                         echo "Triggered TestRigor run with ID: ${runId}"
 
-                        // Poll for test completion
+                        // 3. Poll for test completion
                         def status = "running"
-                        while(status == "running") {
-                            sleep 10
-                            def statusResp = sh(script: "curl -s -X GET https://api.testrigor.com/api/v1/run/${runId} -H 'Authorization: Bearer $API_KEY'", returnStdout: true).trim()
-                            status = sh(script: "echo $statusResp | jq -r '.status'", returnStdout: true).trim()
-                            echo "Current Status: ${status}"
+                        def statusResp = ""
+                        
+                        while(status == "running" || status == "new") {
+                            echo "Waiting for tests... (Status: ${status})"
+                            sleep 15
+                            statusResp = sh(script: "curl -s -X GET https://api.testrigor.com/api/v1/run/${runId} -H 'Authorization: Bearer \$API_KEY'", returnStdout: true).trim()
+                            status = sh(script: "echo '${statusResp}' | jq -r '.status'", returnStdout: true).trim()
                         }
 
-                        // Download test report
-                        sh "curl -s -X GET https://api.testrigor.com/api/v1/run/${runId}/report -H 'Authorization: Bearer $API_KEY' -o TestRigor_Report_${runId}.json"
+                        // 4. Download test report
+                        sh "curl -s -X GET https://api.testrigor.com/api/v1/run/${runId}/report -H 'Authorization: Bearer \$API_KEY' -o TestRigor_Report_${runId}.json"
 
-                        // Check result and fail build if tests failed
-                        def result = sh(script: "echo $statusResp | jq -r '.result'", returnStdout: true).trim()
+                        // 5. Check result and fail build if tests failed
+                        def result = sh(script: "echo '${statusResp}' | jq -r '.result'", returnStdout: true).trim()
                         echo "TestRigor Result: ${result}"
+                        
                         if(result != "passed") {
-                            error "TestRigor tests failed!"
+                            error "TestRigor tests failed with result: ${result}"
                         }
 
                         echo 'TestRigor Integration Tests completed successfully.'
@@ -119,9 +116,7 @@ pipeline {
             }
         }
 
-        // -------------------------
         // Stage 7: Deploy
-        // -------------------------
         stage('Deploy') {
             steps {
                 echo 'Deploying QuickDoc...'
@@ -133,14 +128,10 @@ pipeline {
         }
     }
 
-    // -------------------------
-    // Post Actions
-    // -------------------------
     post {
         success {
             echo '=========================================='
             echo 'Pipeline completed successfully!'
-            echo 'All stages passed including TestRigor tests'
             echo '=========================================='
         }
         failure {
