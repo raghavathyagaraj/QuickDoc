@@ -1,14 +1,20 @@
 pipeline {
     agent any
-    
     stages {
+
+        // -------------------------
+        // Stage 1: Checkout Code
+        // -------------------------
         stage('Checkout') {
             steps {
                 checkout scm
                 echo 'Code checked out successfully'
             }
         }
-        
+
+        // -------------------------
+        // Stage 2: Setup Python Environment
+        // -------------------------
         stage('Setup Environment') {
             steps {
                 sh '''
@@ -20,7 +26,10 @@ pipeline {
                 echo 'Environment setup complete'
             }
         }
-        
+
+        // -------------------------
+        // Stage 3: Run Unit Tests
+        // -------------------------
         stage('Run Unit Tests') {
             steps {
                 sh '''
@@ -34,7 +43,10 @@ pipeline {
                 }
             }
         }
-        
+
+        // -------------------------
+        // Stage 4: Code Quality Check
+        // -------------------------
         stage('Code Quality Check') {
             steps {
                 sh '''
@@ -45,7 +57,10 @@ pipeline {
                 echo 'Code quality check complete'
             }
         }
-        
+
+        // -------------------------
+        // Stage 5: Build
+        // -------------------------
         stage('Build') {
             steps {
                 echo 'Building application...'
@@ -55,58 +70,58 @@ pipeline {
                 '''
             }
         }
-        
+
+        // -------------------------
+        // Stage 6: TestRigor Integration Tests
+        // -------------------------
         stage('testRigor Integration Tests') {
             steps {
-                echo '=========================================='
-                echo 'Running testRigor Integration Tests'
-                echo '=========================================='
-                
-                sh '''
-                    echo ""
-                    echo "testRigor Test Suite: QuickDoc Homepage Validation"
-                    echo "=================================================="
-                    echo ""
-                    
-                    echo "Test 1: Homepage loads successfully.............. PASSED"
-                    sleep 1
-                    
-                    echo "Test 2: Navigation links are present............. PASSED"
-                    sleep 1
-                    
-                    echo "Test 3: CTA buttons are visible.................. PASSED"
-                    sleep 1
-                    
-                    echo "Test 4: Search functionality is present.......... PASSED"
-                    sleep 1
-                    
-                    echo "Test 5: Specialties section displays correctly... PASSED"
-                    sleep 1
-                    
-                    echo "Test 6: Stats section displays correctly......... PASSED"
-                    sleep 1
-                    
-                    echo "Test 7: Testimonials section displays correctly.. PASSED"
-                    sleep 1
-                    
-                    echo "Test 8: Footer contains required links........... PASSED"
-                    sleep 1
-                    
-                    echo "Test 9: Page elements are responsive............. PASSED"
-                    sleep 1
-                    
-                    echo "Test 10: Trust badges are displayed.............. PASSED"
-                    sleep 1
-                    
-                    echo ""
-                    echo "=================================================="
-                    echo "testRigor Summary: 10/10 Tests Passed"
-                    echo "Status: ALL TESTS PASSED"
-                    echo "=================================================="
-                '''
+                withCredentials([string(credentialsId: 'test_rigor_secret', variable: 'API_KEY')]) {
+                    script {
+                        echo '=========================================='
+                        echo 'Running TestRigor Integration Tests'
+                        echo '=========================================='
+
+                        // Trigger TestRigor test suite
+                        def response = sh(script: """
+                            curl -s -X POST "https://api.testrigor.com/api/v1/run" \\
+                            -H "Authorization: Bearer $API_KEY" \\
+                            -H "Content-Type: application/json" \\
+                            -d '{ "testSuiteName": "QuickDoc Homepage real test" }'
+                        """, returnStdout: true).trim()
+
+                        // Extract runId
+                        def runId = sh(script: "echo $response | jq -r '.runId'", returnStdout: true).trim()
+                        echo "Triggered TestRigor run with ID: ${runId}"
+
+                        // Poll for test completion
+                        def status = "running"
+                        while(status == "running") {
+                            sleep 10
+                            def statusResp = sh(script: "curl -s -X GET https://api.testrigor.com/api/v1/run/${runId} -H 'Authorization: Bearer $API_KEY'", returnStdout: true).trim()
+                            status = sh(script: "echo $statusResp | jq -r '.status'", returnStdout: true).trim()
+                            echo "Current Status: ${status}"
+                        }
+
+                        // Download test report
+                        sh "curl -s -X GET https://api.testrigor.com/api/v1/run/${runId}/report -H 'Authorization: Bearer $API_KEY' -o TestRigor_Report_${runId}.json"
+
+                        // Check result and fail build if tests failed
+                        def result = sh(script: "echo $statusResp | jq -r '.result'", returnStdout: true).trim()
+                        echo "TestRigor Result: ${result}"
+                        if(result != "passed") {
+                            error "TestRigor tests failed!"
+                        }
+
+                        echo 'TestRigor Integration Tests completed successfully.'
+                    }
+                }
             }
         }
-        
+
+        // -------------------------
+        // Stage 7: Deploy
+        // -------------------------
         stage('Deploy') {
             steps {
                 echo 'Deploying QuickDoc...'
@@ -117,12 +132,15 @@ pipeline {
             }
         }
     }
-    
+
+    // -------------------------
+    // Post Actions
+    // -------------------------
     post {
         success {
             echo '=========================================='
             echo 'Pipeline completed successfully!'
-            echo 'All stages passed including testRigor tests'
+            echo 'All stages passed including TestRigor tests'
             echo '=========================================='
         }
         failure {
