@@ -18,7 +18,7 @@ QuickDoc is a web-based healthcare appointment booking platform that connects pa
 |-------|------------|
 | **Frontend** | HTML, CSS, JavaScript |
 | **Backend** | Python 3.x with Flask/Django |
-| **Database** | PostgreSQL |
+| **Database** | Postgres|
 | **Version Control** | Git & GitHub |
 
 ---
