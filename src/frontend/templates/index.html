@@ -9,11 +9,67 @@
     <!-- AOS Animation Library -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+       /* General reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Make hero layout side-by-side */
+.hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Right container center */
+.hero-image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Gray rounded box */
+.hero-image {
+    position: relative;
+    width: 480px;
+    height: 420px;
+    background: #eef1f4;
+    border-radius: 30px;
+    overflow: hidden;
+}
+
+/* Doctors wrapper fills box */
+.doctors-img {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* Common doctor style */
+.doctor-img {
+    position: absolute;
+    width: 230px;
+    height: auto;
+    object-fit: cover;
+    filter: drop-shadow(0 20px 35px rgba(0,0,0,0.15));
+}
+
+/* Top doctor */
+.doctor-top {
+    top: 25px;
+    left: 40px;
+    z-index: 2;
+}
+
+/* Bottom doctor */
+.doctor-bottom {
+    bottom: 25px;
+    left: 40px;
+    z-index: 1;
+}
+        
 
         :root {
             --primary: #0D9488;
@@ -1213,8 +1269,12 @@
         <div class="hero-visual" data-aos="fade-left" data-aos-delay="400">
             <div class="hero-image-container">
                 <div class="hero-image">
-                    <div class="doctors-img">👨‍⚕️👩‍⚕️</div>
-                </div>
+                    <div class="doctors-img">
+    <img src="../static/images/male-doctor.jpg" alt="Male Doctor" class="doctor-img doctor-top">
+    <img src="../static/images/female-doctor.jpg" alt="Female Doctor" class="doctor-img doctor-bottom">
+
+</div>
+</div>
                 
                 <div class="floating-card appointment">
                     <div class="icon-circle green">
