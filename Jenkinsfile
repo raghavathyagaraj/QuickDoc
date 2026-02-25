@@ -88,6 +88,7 @@ pipeline {
                     echo "Deploying to: ${DEV_EC2_IP}"
                     
                     scp -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} src/frontend/templates/index.html ec2-user@${DEV_EC2_IP}:${DEPLOY_PATH}/
+                    scp -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} -r src/frontend/static ec2-user@${DEV_EC2_IP}:${DEPLOY_PATH}/
                     
                     echo "=================================================="
                     echo "DEV Deployment Successful!"
