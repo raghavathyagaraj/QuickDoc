@@ -4,6 +4,7 @@ pipeline {
     environment {
         DEV_EC2_IP = '18.217.96.211'
         DEPLOY_PATH = '/var/www/quickdoc'
+        SSH_KEY_PATH = '/Users/raghavathyagaraj/Downloads/quick-doc-dev.pem'
     }
     
     stages {
@@ -83,18 +84,16 @@ pipeline {
                 echo 'Deploying to AWS EC2 DEV Server'
                 echo '=========================================='
                 
-                withCredentials([sshUserPrivateKey(credentialsId: 'ec2-dev-ssh', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
-                    sh '''
-                        echo "Deploying to: ${DEV_EC2_IP}"
-                        
-                        scp -o StrictHostKeyChecking=no -i ${SSH_KEY} src/frontend/templates/index.html ${SSH_USER}@${DEV_EC2_IP}:${DEPLOY_PATH}/
-                        
-                        echo "=================================================="
-                        echo "DEV Deployment Successful!"
-                        echo "URL: http://${DEV_EC2_IP}"
-                        echo "=================================================="
-                    '''
-                }
+                sh '''
+                    echo "Deploying to: ${DEV_EC2_IP}"
+                    
+                    scp -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} src/frontend/templates/index.html ec2-user@${DEV_EC2_IP}:${DEPLOY_PATH}/
+                    
+                    echo "=================================================="
+                    echo "DEV Deployment Successful!"
+                    echo "URL: http://${DEV_EC2_IP}"
+                    echo "=================================================="
+                '''
             }
         }
     }
