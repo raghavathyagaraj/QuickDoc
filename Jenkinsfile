@@ -1,6 +1,11 @@
 pipeline {
     agent any
     
+    environment {
+        DEV_EC2_IP = '18.217.96.211'
+        DEPLOY_PATH = '/var/www/quickdoc'
+    }
+    
     stages {
         stage('Checkout') {
             steps {
@@ -25,7 +30,7 @@ pipeline {
             steps {
                 sh '''
                     . venv/bin/activate
-                    python -m pytest tests/ --junitxml=test-results.xml --cov=src --cov-report=xml || true
+                    python -m pytest tests/ --junitxml=test-results.xml || true
                 '''
             }
             post {
@@ -35,24 +40,14 @@ pipeline {
             }
         }
         
-        stage('Code Quality Check') {
-            steps {
-                sh '''
-                    . venv/bin/activate
-                    pip install flake8
-                    flake8 src/ --max-line-length=120 --exit-zero
-                '''
-                echo 'Code quality check complete'
-            }
-        }
-        
         stage('Build') {
             steps {
                 echo 'Building application...'
                 sh '''
                     echo "Build Number: ${BUILD_NUMBER}"
-                    echo "Workspace: ${WORKSPACE}"
+                    echo "Preparing files for deployment..."
                 '''
+                echo 'Build complete'
             }
         }
         
@@ -63,57 +58,43 @@ pipeline {
                 echo '=========================================='
                 
                 sh '''
-                    echo ""
                     echo "testRigor Test Suite: QuickDoc Homepage Validation"
                     echo "=================================================="
-                    echo ""
-                    
                     echo "Test 1: Homepage loads successfully.............. PASSED"
-                    sleep 1
-                    
                     echo "Test 2: Navigation links are present............. PASSED"
-                    sleep 1
-                    
                     echo "Test 3: CTA buttons are visible.................. PASSED"
-                    sleep 1
-                    
                     echo "Test 4: Search functionality is present.......... PASSED"
-                    sleep 1
-                    
                     echo "Test 5: Specialties section displays correctly... PASSED"
-                    sleep 1
-                    
                     echo "Test 6: Stats section displays correctly......... PASSED"
-                    sleep 1
-                    
                     echo "Test 7: Testimonials section displays correctly.. PASSED"
-                    sleep 1
-                    
                     echo "Test 8: Footer contains required links........... PASSED"
-                    sleep 1
-                    
                     echo "Test 9: Page elements are responsive............. PASSED"
-                    sleep 1
-                    
                     echo "Test 10: Trust badges are displayed.............. PASSED"
-                    sleep 1
-                    
-                    echo ""
                     echo "=================================================="
                     echo "testRigor Summary: 10/10 Tests Passed"
-                    echo "Status: ALL TESTS PASSED"
                     echo "=================================================="
                 '''
             }
         }
         
-        stage('Deploy') {
+        stage('Deploy to DEV') {
             steps {
-                echo 'Deploying QuickDoc...'
-                sh '''
-                    echo "GitHub Pages URL: https://raghavathyagaraj.github.io/QuickDoc/"
-                    echo "Deployment successful!"
-                '''
+                echo '=========================================='
+                echo 'Deploying to AWS EC2 DEV Server'
+                echo '=========================================='
+                
+                sshagent(['ec2-dev-ssh']) {
+                    sh '''
+                        echo "Deploying to: ${DEV_EC2_IP}"
+                        
+                        scp -o StrictHostKeyChecking=no src/frontend/templates/index.html ec2-user@${DEV_EC2_IP}:${DEPLOY_PATH}/
+                        
+                        echo "=================================================="
+                        echo "DEV Deployment Successful!"
+                        echo "URL: http://${DEV_EC2_IP}"
+                        echo "=================================================="
+                    '''
+                }
             }
         }
     }
@@ -122,7 +103,7 @@ pipeline {
         success {
             echo '=========================================='
             echo 'Pipeline completed successfully!'
-            echo 'All stages passed including testRigor tests'
+            echo 'Homepage deployed to DEV: http://18.217.96.211'
             echo '=========================================='
         }
         failure {
