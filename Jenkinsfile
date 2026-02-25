@@ -83,11 +83,11 @@ pipeline {
                 echo 'Deploying to AWS EC2 DEV Server'
                 echo '=========================================='
                 
-                sshagent(['ec2-dev-ssh']) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'ec2-dev-ssh', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
                     sh '''
                         echo "Deploying to: ${DEV_EC2_IP}"
                         
-                        scp -o StrictHostKeyChecking=no src/frontend/templates/index.html ec2-user@${DEV_EC2_IP}:${DEPLOY_PATH}/
+                        scp -o StrictHostKeyChecking=no -i ${SSH_KEY} src/frontend/templates/index.html ${SSH_USER}@${DEV_EC2_IP}:${DEPLOY_PATH}/
                         
                         echo "=================================================="
                         echo "DEV Deployment Successful!"
