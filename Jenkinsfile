@@ -53,30 +53,21 @@ pipeline {
         }
         
         stage('testRigor Integration Tests') {
-            steps {
-                echo '=========================================='
-                echo 'Running testRigor Integration Tests'
-                echo '=========================================='
-                
-                sh '''
-                    echo "testRigor Test Suite: QuickDoc Homepage real test"
-                    echo "=================================================="
-                    echo "Test 1: Homepage loads successfully.............. PASSED"
-                    echo "Test 2: Navigation links are present............. PASSED"
-                    echo "Test 3: CTA buttons are visible.................. PASSED"
-                    echo "Test 4: Search functionality is present.......... PASSED"
-                    echo "Test 5: Specialties section displays correctly... PASSED"
-                    echo "Test 6: Stats section displays correctly......... PASSED"
-                    echo "Test 7: Testimonials section displays correctly.. PASSED"
-                    echo "Test 8: Footer contains required links........... PASSED"
-                    echo "Test 9: Page elements are responsive............. PASSED"
-                    echo "Test 10: Trust badges are displayed.............. PASSED"
-                    echo "=================================================="
-                    echo "testRigor Summary: 10/10 Tests Passed"
-                    echo "=================================================="
-                '''
+                steps {
+                    echo "=========================================="
+                    echo "Triggering testRigor Integration Tests"
+                    echo "=========================================="
+                    sh '''
+                        response=$(curl -s -X POST "https://api.testrigor.com/api/v1/apps/YOUR_APP_ID/retest" \
+                            -H "auth-token: UM2h1XU87swTe72ASAlskBlZGBlQWjxZqvWVe0R9kmQxkE5QSA9D" \
+                            -H "Content-Type: application/json")
+                        echo "TestRigor Response: $response"
+                    '''
+                    echo "=========================================="
+                    echo "testRigor tests triggered! Check dashboard for results."
+                    echo "=========================================="
+                }
             }
-        }
         
         stage('Deploy to DEV') {
             steps {
