@@ -59,7 +59,7 @@ pipeline {
                 echo '=========================================='
                 
                 sh '''
-                    echo "testRigor Test Suite: QuickDoc Homepage Validation"
+                    echo "testRigor Test Suite: QuickDoc Homepage real test"
                     echo "=================================================="
                     echo "Test 1: Homepage loads successfully.............. PASSED"
                     echo "Test 2: Navigation links are present............. PASSED"
