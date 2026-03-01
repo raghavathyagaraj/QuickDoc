@@ -52,23 +52,6 @@ pipeline {
             }
         }
         
-        stage('testRigor Integration Tests') {
-                steps {
-                    echo "=========================================="
-                    echo "Triggering testRigor Integration Tests"
-                    echo "=========================================="
-                    sh '''
-                        response=$(curl -s -X POST "https://api.testrigor.com/api/v1/apps/YOUR_APP_ID/retest" \
-                            -H "auth-token: UM2h1XU87swTe72ASAlskBlZGBlQWjxZqvWVe0R9kmQxkE5QSA9D" \
-                            -H "Content-Type: application/json")
-                        echo "TestRigor Response: $response"
-                    '''
-                    echo "=========================================="
-                    echo "testRigor tests triggered! Check dashboard for results."
-                    echo "=========================================="
-                }
-            }
-        
         stage('Deploy to DEV') {
             steps {
                 echo '=========================================='
@@ -88,6 +71,23 @@ pipeline {
                 '''
             }
         }
+        
+        stage('testRigor Integration Tests') {
+            steps {
+                echo "=========================================="
+                echo "Triggering testRigor Integration Tests"
+                echo "=========================================="
+                sh '''
+                    response=$(curl -s -X POST "https://api.testrigor.com/api/v1/apps/Hs5GePpDbaANXBnRy/retest" \
+                        -H "auth-token: UM2h1XU87swTe72ASAlskBlZGBlQWjxZqvWVe0R9kmQxkE5QSA9D" \
+                        -H "Content-Type: application/json")
+                    echo "TestRigor Response: $response"
+                '''
+                echo "=========================================="
+                echo "testRigor tests triggered! Check dashboard for results."
+                echo "=========================================="
+            }
+        }
     }
     
     post {
@@ -95,6 +95,7 @@ pipeline {
             echo '=========================================='
             echo 'Pipeline completed successfully!'
             echo 'Homepage deployed to DEV: http://18.217.96.211'
+            echo 'testRigor tests running at: https://app.testrigor.com/test-suites/Hs5GePpDbaANXBnRy'
             echo '=========================================='
         }
         failure {
