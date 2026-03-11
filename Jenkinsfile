@@ -53,7 +53,11 @@ pipeline {
         
         stage('Deploy to DEV') {
             when {
+<<<<<<< HEAD
                 branch 'dev'
+=======
+                branch 'develop'
+>>>>>>> 315a180 (Updated Jenkinsfile with DEV and QA pipeline)
             }
             steps {
                 echo '=========================================='
