@@ -2,15 +2,17 @@ pipeline {
     agent any
     
     environment {
-        DEV_EC2_IP = '18.217.96.211'
+        DEV_EC2_IP = '172.31.14.22'
+        QA_EC2_IP = '172.31.7.234'
         DEPLOY_PATH = '/var/www/quickdoc'
-        SSH_KEY_PATH = '/Users/raghavathyagaraj/Downloads/quick-doc-dev.pem'
+        SSH_KEY = '/var/lib/jenkins/.ssh/id_rsa'
     }
     
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
+                echo "Branch: ${env.BRANCH_NAME}"
                 echo 'Code checked out successfully'
             }
         }
@@ -43,49 +45,57 @@ pipeline {
         
         stage('Build') {
             steps {
-                echo 'Building application...'
-                sh '''
-                    echo "Build Number: ${BUILD_NUMBER}"
-                    echo "Preparing files for deployment..."
-                '''
+                echo "Build Number: ${BUILD_NUMBER}"
+                echo 'Preparing files for deployment...'
                 echo 'Build complete'
             }
         }
         
         stage('Deploy to DEV') {
+            when {
+                branch 'dev'
+            }
             steps {
                 echo '=========================================='
-                echo 'Deploying to AWS EC2 DEV Server'
+                echo 'Deploying to DEV Environment'
                 echo '=========================================='
-                
-                sh '''
-                    echo "Deploying to: ${DEV_EC2_IP}"
-                    
-                    scp -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} src/frontend/templates/index.html ec2-user@${DEV_EC2_IP}:${DEPLOY_PATH}/
-                    scp -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} -r src/frontend/static ec2-user@${DEV_EC2_IP}:${DEPLOY_PATH}/
-                    
-                    echo "=================================================="
-                    echo "DEV Deployment Successful!"
-                    echo "URL: http://${DEV_EC2_IP}"
-                    echo "=================================================="
-                '''
+                sh """
+                    ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ec2-user@${DEV_EC2_IP} 'sudo mkdir -p ${DEPLOY_PATH} && sudo chown -R ec2-user:ec2-user ${DEPLOY_PATH}'
+                    scp -i ${SSH_KEY} -o StrictHostKeyChecking=no -r src/* ec2-user@${DEV_EC2_IP}:${DEPLOY_PATH}/
+                    scp -i ${SSH_KEY} -o StrictHostKeyChecking=no requirements.txt ec2-user@${DEV_EC2_IP}:${DEPLOY_PATH}/
+                    ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ec2-user@${DEV_EC2_IP} '
+                        cd ${DEPLOY_PATH}
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install -r requirements.txt
+                        sudo systemctl restart nginx
+                    '
+                """
+                echo 'DEV deployment successful!'
             }
         }
         
-        stage('testRigor Integration Tests') {
+        stage('Deploy to QA') {
+            when {
+                branch 'qa'
+            }
             steps {
-                echo "=========================================="
-                echo "Triggering testRigor Integration Tests"
-                echo "=========================================="
-                sh '''
-                    response=$(curl -s -X POST "https://api.testrigor.com/api/v1/apps/Hs5GePpDbaANXBnRy/retest" \
-                        -H "auth-token: UM2h1XU87swTe72ASAlskBlZGBlQWjxZqvWVe0R9kmQxkE5QSA9D" \
-                        -H "Content-Type: application/json")
-                    echo "TestRigor Response: $response"
-                '''
-                echo "=========================================="
-                echo "testRigor tests triggered! Check dashboard for results."
-                echo "=========================================="
+                echo '=========================================='
+                echo 'Deploying to QA Environment'
+                echo '=========================================='
+                sh """
+                    ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ec2-user@${QA_EC2_IP} 'sudo mkdir -p ${DEPLOY_PATH} && sudo chown -R ec2-user:ec2-user ${DEPLOY_PATH}'
+                    scp -i ${SSH_KEY} -o StrictHostKeyChecking=no -r src/* ec2-user@${QA_EC2_IP}:${DEPLOY_PATH}/
+                    scp -i ${SSH_KEY} -o StrictHostKeyChecking=no requirements.txt ec2-user@${QA_EC2_IP}:${DEPLOY_PATH}/
+                    ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ec2-user@${QA_EC2_IP} '
+                        cd ${DEPLOY_PATH}
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install -r requirements.txt
+                        sudo systemctl restart nginx
+                    '
+                """
+                echo 'QA deployment successful!'
             }
         }
     }
@@ -94,12 +104,12 @@ pipeline {
         success {
             echo '=========================================='
             echo 'Pipeline completed successfully!'
-            echo 'Homepage deployed to DEV: http://18.217.96.211'
-            echo 'testRigor tests running at: https://app.testrigor.com/test-suites/Hs5GePpDbaANXBnRy'
             echo '=========================================='
         }
         failure {
-            echo 'Pipeline failed!'
+            echo '=========================================='
+            echo 'Pipeline FAILED! Check logs above.'
+            echo '=========================================='
         }
     }
 }
