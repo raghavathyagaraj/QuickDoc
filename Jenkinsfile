@@ -1,46 +1,54 @@
 pipeline {
     agent any
-    
+
     parameters {
-        // Allows you to choose the environment when you click 'Build with Parameters'
-        choice(name: 'DEPLOY_ENV', choices: ['DEV', 'QA'], description: 'Select the environment to deploy to')
+        // 'AUTO' will look at the branch name, but you can override manually if needed
+        choice(name: 'DEPLOY_ENV', choices: ['AUTO', 'DEV', 'QA'], description: 'Select environment')
     }
-    
+
     environment {
-        // Your existing Dev IP and your new QA IP
-        DEV_EC2_IP = '18.217.96.211'
-        QA_EC2_IP = '18.220.186.185'
-        
+        DEV_IP = '18.217.96.211'
+        QA_IP  = '18.220.186.185'
         DEPLOY_PATH = '/var/www/quickdoc'
-        SSH_KEY_PATH = '/Users/raghavathyagaraj/Downloads/quick-doc-dev.pem'
         
-        // This logic determines which IP to use based on the parameter selected
-        TARGET_IP = "${params.DEPLOY_ENV == 'QA' ? QA_EC2_IP : DEV_EC2_IP}"
+        // Match this exactly to the ID in your screenshot
+        SSH_CRED_ID = 'ec2-dev-ssh' 
+        TEST_RIGOR_CRED_ID = 'test_rigor_secret'
     }
-    
+
     stages {
+        stage('Determine Environment') {
+            steps {
+                script {
+                    // Logic: If parameter is AUTO, detect based on Git branch name
+                    // 'env.GIT_BRANCH' usually contains 'origin/qa' or 'origin/develop'
+                    def currentBranch = env.GIT_BRANCH ?: 'develop'
+                    
+                    if (params.DEPLOY_ENV == 'QA' || currentBranch.contains('qa')) {
+                        env.TARGET_IP = QA_IP
+                        env.ENV_NAME = 'QA'
+                    } else {
+                        env.TARGET_IP = DEV_IP
+                        env.ENV_NAME = 'DEV'
+                    }
+                    echo "Targeting Environment: ${env.ENV_NAME} at IP: ${env.TARGET_IP}"
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
                 checkout scm
-                echo "Code checked out successfully for ${params.DEPLOY_ENV} environment"
             }
         }
-        
-        stage('Setup Environment') {
+
+        stage('Setup & Test') {
             steps {
                 sh '''
                     python3 -m venv venv
                     . venv/bin/activate
                     pip install --upgrade pip
                     pip install -r requirements.txt
-                '''
-            }
-        }
-        
-        stage('Run Unit Tests') {
-            steps {
-                sh '''
-                    . venv/bin/activate
                     python -m pytest tests/ --junitxml=test-results.xml || true
                 '''
             }
@@ -50,47 +58,54 @@ pipeline {
                 }
             }
         }
-        
-        stage('Deploy') {
+
+        stage('Deploy to EC2') {
             steps {
-                echo "=========================================="
-                echo "Deploying to AWS EC2 ${params.DEPLOY_ENV} Server"
-                echo "Target IP: ${TARGET_IP}"
-                echo "=========================================="
+                echo "🚀 Deploying to ${env.ENV_NAME} (${env.TARGET_IP})..."
                 
-                sh '''
-                    # Copy files to the target IP (Dev or QA)
-                    scp -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} src/frontend/templates/index.html ec2-user@${TARGET_IP}:${DEPLOY_PATH}/
-                    scp -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} -r src/frontend/static ec2-user@${TARGET_IP}:${DEPLOY_PATH}/
-                '''
+                // This block uses your 'ec2-dev-ssh' credential from Jenkins
+                sshagent([env.SSH_CRED_ID]) {
+                    sh '''
+                        # 1. Prepare directory and permissions on remote EC2
+                        ssh -o StrictHostKeyChecking=no ec2-user@${TARGET_IP} "sudo mkdir -p ${DEPLOY_PATH} && sudo chown -R ec2-user:ec2-user ${DEPLOY_PATH}"
+                        
+                        # 2. Transfer files using SCP
+                        scp -o StrictHostKeyChecking=no src/frontend/templates/index.html ec2-user@${TARGET_IP}:${DEPLOY_PATH}/
+                        scp -o StrictHostKeyChecking=no -r src/frontend/static ec2-user@${TARGET_IP}:${DEPLOY_PATH}/
+                        
+                        # 3. Final permission sync
+                        ssh -o StrictHostKeyChecking=no ec2-user@${TARGET_IP} "sudo chmod -R 755 ${DEPLOY_PATH}"
+                    '''
+                }
             }
         }
-        
-        stage('testRigor Integration Tests') {
-            // We only trigger this if we are deploying to QA (optional logic)
+
+        stage('testRigor Integration') {
             when {
-                expression { params.DEPLOY_ENV == 'QA' }
+                // Only run tests if we are deploying to the QA environment
+                expression { env.ENV_NAME == 'QA' }
             }
             steps {
-                echo "Triggering testRigor for QA..."
-                sh '''
-                    curl -s -X POST "https://api.testrigor.com/api/v1/apps/Hs5GePpDbaANXBnRy/retest" \
-                        -H "auth-token: UM2h1XU87swTe72ASAlskBlZGBlQWjxZqvWVe0R9kmQxkE5QSA9D" \
-                        -H "Content-Type: application/json"
-                '''
+                // Using 'withCredentials' to securely inject your testRigor token
+                withCredentials([string(credentialsId: env.TEST_RIGOR_CRED_ID, variable: 'TR_TOKEN')]) {
+                    echo "Triggering testRigor for QA Environment..."
+                    sh '''
+                        curl -s -X POST "https://api.testrigor.com/api/v1/apps/Hs5GePpDbaANXBnRy/retest" \
+                            -H "auth-token: ${TR_TOKEN}" \
+                            -H "Content-Type: application/json"
+                    '''
+                }
             }
         }
     }
-    
+
     post {
         success {
-            echo "=========================================="
-            echo "Pipeline completed successfully for ${params.DEPLOY_ENV}!"
-            echo "URL: http://${TARGET_IP}"
-            echo "=========================================="
+            echo "✅ Deployment Successful to ${env.ENV_NAME}!"
+            echo "URL: http://${env.TARGET_IP}"
         }
         failure {
-            echo "Pipeline failed for ${params.DEPLOY_ENV}!"
+            echo "❌ Pipeline failed! Check logs for deployment or test errors."
         }
     }
 }
