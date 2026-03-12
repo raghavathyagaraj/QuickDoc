@@ -10,11 +10,12 @@ pipeline {
         QA_IP  = '18.220.186.185'
         DEPLOY_PATH = '/var/www/quickdoc'
         
-        // Since you are on localhost, we will use your local .pem file path
+        // Local path to your PEM file
         SSH_KEY_PATH = '/Users/raghavathyagaraj/Downloads/quick-doc-dev.pem'
         
-        // Match this to the "testRigor API Key" ID in your screenshot
+        // Credentials IDs saved in Jenkins
         TEST_RIGOR_CRED_ID = 'test_rigor_secret'
+        SLACK_CRED_ID = 'slack-webhook-url'
     }
 
     stages {
@@ -97,10 +98,25 @@ pipeline {
     post {
         success {
             echo "✅ Deployment Successful to ${env.ENV_NAME}!"
-            echo "URL: http://${env.TARGET_IP}"
+            // Send message to Slack channel
+            slackSend(
+                tokenCredentialId: "${env.SLACK_CRED_ID}",
+                color: 'good',
+                message: """✅ *QuickDoc Deployment Success!*
+                *Environment:* ${env.ENV_NAME}
+                *Build Number:* ${env.BUILD_NUMBER}
+                *Branch:* ${env.GIT_BRANCH}
+                *URL:* http://${env.TARGET_IP}"""
+            )
         }
         failure {
-            echo "❌ Pipeline failed! Use the console output to check if it was a Python test or a connection issue."
+            echo "❌ Pipeline failed!"
+            // Send failure message to Slack
+            slackSend(
+                tokenCredentialId: "${env.SLACK_CRED_ID}",
+                color: 'danger',
+                message: "❌ *Build Failed:* ${env.JOB_NAME} #${env.BUILD_NUMBER}. Check Jenkins console logs."
+            )
         }
     }
 }
