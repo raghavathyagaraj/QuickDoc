@@ -43,7 +43,7 @@ def login():
     if current_user.is_authenticated:
         if current_user.role == "doctor":
             return redirect(url_for("dashboard.doctor_dashboard"))
-    return redirect(url_for("dashboard.patient_dashboard"))
+        return redirect(url_for("dashboard.patient_dashboard"))
 
     form = LoginForm()
 
