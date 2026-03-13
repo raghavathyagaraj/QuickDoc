@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register as Patient — QuickDoc</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #0D9488;
+            --primary-dark: #0F766E;
+            --primary-light: #CCFBF1;
+            --dark: #111827;
+            --gray-900: #1F2937;
+            --gray-700: #374151;
+            --gray-600: #4B5563;
+            --gray-500: #6B7280;
+            --gray-400: #9CA3AF;
+            --gray-200: #E5E7EB;
+            --gray-100: #F3F4F6;
+            --gray-50: #F9FAFB;
+            --white: #FFFFFF;
+            --error: #EF4444;
+            --success: #10B981;
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(--gray-900); }
+
+        /* ── Navbar (matches homepage) ── */
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 5%; background: var(--white);
+            position: sticky; top: 0; z-index: 1000;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        .logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+        .logo-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1rem; }
+        .logo-text { font-size: 1.25rem; font-weight: 700; color: var(--dark); }
+        .nav-right { display: flex; align-items: center; gap: 1rem; font-size: 0.9rem; }
+        .nav-right a { color: var(--gray-600); text-decoration: none; font-weight: 500; }
+        .nav-right a:hover { color: var(--primary); }
+        .btn-nav { background: var(--primary); color: white !important; padding: 0.5rem 1.25rem; border-radius: 8px; font-weight: 500; }
+        .btn-nav:hover { background: var(--primary-dark) !important; }
+
+        /* ── Page Layout ── */
+        .page-wrapper {
+            min-height: calc(100vh - 65px);
+            display: flex; align-items: flex-start; justify-content: center;
+            padding: 2.5rem 1rem;
+        }
+
+        .register-card {
+            background: var(--white); border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 2.5rem; width: 100%; max-width: 680px;
+        }
+
+        /* ── Header ── */
+        .card-header { margin-bottom: 2rem; }
+        .card-header .badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: var(--primary-light); color: var(--primary-dark);
+            padding: 0.35rem 0.9rem; border-radius: 50px;
+            font-size: 0.78rem; font-weight: 500; margin-bottom: 0.75rem;
+        }
+        .card-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--dark); margin-bottom: 0.4rem; }
+        .card-header p { font-size: 0.9rem; color: var(--gray-500); }
+        .card-header p a { color: var(--primary); text-decoration: none; font-weight: 500; }
+        .card-header p a:hover { text-decoration: underline; }
+
+        /* ── Flash Messages ── */
+        .alert {
+            padding: 0.875rem 1rem; border-radius: 10px;
+            margin-bottom: 1.25rem; font-size: 0.9rem;
+            display: flex; align-items: center; gap: 0.6rem;
+        }
+        .alert-success { background: #D1FAE5; color: #065F46; border: 1px solid #6EE7B7; }
+        .alert-danger  { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
+        .alert-info    { background: #DBEAFE; color: #1E40AF; border: 1px solid #93C5FD; }
+
+        /* ── Form Sections ── */
+        .form-section {
+            border: 1px solid var(--gray-200); border-radius: 12px;
+            padding: 1.25rem 1.5rem; margin-bottom: 1.25rem;
+        }
+        .section-title {
+            display: flex; align-items: center; gap: 0.6rem;
+            font-size: 0.9rem; font-weight: 600; color: var(--primary-dark);
+            margin-bottom: 1rem; padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .section-title i { font-size: 0.95rem; }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group:last-child { margin-bottom: 0; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+        label {
+            display: block; font-size: 0.85rem; font-weight: 600;
+            color: var(--gray-700); margin-bottom: 0.35rem;
+        }
+        label .optional { font-weight: 400; color: var(--gray-400); font-size: 0.8rem; }
+
+        .input-wrap { position: relative; }
+        .input-wrap i {
+            position: absolute; left: 0.9rem; top: 50%;
+            transform: translateY(-50%); color: var(--gray-400); font-size: 0.9rem;
+        }
+        .input-wrap input,
+        .input-wrap select,
+        .input-wrap textarea {
+            width: 100%; padding: 0.65rem 0.9rem 0.65rem 2.4rem;
+            border: 1.5px solid var(--gray-200); border-radius: 8px;
+            font-size: 0.9rem; font-family: 'Inter', sans-serif;
+            color: var(--gray-900); background: var(--white);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            appearance: none;
+        }
+        .input-wrap.no-icon input,
+        .input-wrap.no-icon select,
+        .input-wrap.no-icon textarea { padding-left: 0.9rem; }
+        .input-wrap input:focus,
+        .input-wrap select:focus,
+        .input-wrap textarea:focus {
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(13,148,136,0.12);
+        }
+        .input-wrap input.error,
+        .input-wrap select.error { border-color: var(--error); }
+
+        .prefix-wrap { display: flex; }
+        .prefix-wrap .prefix {
+            background: var(--gray-100); border: 1.5px solid var(--gray-200);
+            border-right: none; padding: 0.65rem 0.85rem;
+            border-radius: 8px 0 0 8px; color: var(--gray-500);
+            font-size: 0.9rem; display: flex; align-items: center;
+        }
+        .prefix-wrap input { border-radius: 0 8px 8px 0; }
+
+        .field-error { color: var(--error); font-size: 0.8rem; margin-top: 0.3rem; display: flex; align-items: center; gap: 0.3rem; }
+        .field-hint  { color: var(--gray-400); font-size: 0.8rem; margin-top: 0.3rem; }
+
+        /* ── Submit Button ── */
+        .btn-submit {
+            width: 100%; padding: 0.875rem;
+            background: var(--primary); color: white;
+            border: none; border-radius: 10px;
+            font-size: 1rem; font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer; margin-top: 0.5rem;
+            display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-submit:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13,148,136,0.3);
+        }
+
+        .divider { text-align: center; color: var(--gray-400); font-size: 0.85rem; margin: 1rem 0; }
+        .divider a { color: var(--primary); text-decoration: none; font-weight: 500; }
+
+        @media (max-width: 600px) {
+            .form-row, .form-row-3 { grid-template-columns: 1fr; }
+            .register-card { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <a href="/" class="logo">
+        <div class="logo-icon"><i class="fas fa-plus"></i></div>
+        <span class="logo-text">QuickDoc</span>
+    </a>
+    <div class="nav-right">
+        <a href="/auth/login">Log In</a>
+        <a href="/auth/register/doctor" class="btn-nav">Join as Doctor</a>
+    </div>
+</nav>
+
+<!-- Page -->
+<div class="page-wrapper">
+  <div class="register-card">
+
+    <div class="card-header">
+      <div class="badge"><i class="fas fa-user-injured"></i> Patient Registration</div>
+      <h1>Create Your Account</h1>
+      <p>Already have an account? <a href="/auth/login">Log in here</a> &nbsp;·&nbsp; Are you a doctor? <a href="/auth/register/doctor">Register as Doctor →</a></p>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+          <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('auth.register_patient') }}" novalidate>
+      {{ form.hidden_tag() }}
+
+      <!-- Account Details -->
+      <div class="form-section">
+        <div class="section-title"><i class="fas fa-lock"></i> Account Details</div>
+
+        <div class="form-group">
+          {{ form.email.label }}
+          <div class="input-wrap">
+            <i class="fas fa-envelope"></i>
+            {{ form.email(placeholder="you@email.com", class="form-control" + (" error" if form.email.errors else "")) }}
+          </div>
+          {% for e in form.email.errors %}<p class="field-error"><i class="fas fa-exclamation-circle"></i>{{ e }}</p>{% endfor %}
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            {{ form.password.label }}
+            <div class="input-wrap">
+              <i class="fas fa-key"></i>
+              {{ form.password(placeholder="Min 8 chars, 1 uppercase, 1 number", class="form-control" + (" error" if form.password.errors else "")) }}
+            </div>
+            {% for e in form.password.errors %}<p class="field-error"><i class="fas fa-exclamation-circle"></i>{{ e }}</p>{% endfor %}
+          </div>
+          <div class="form-group">
+            {{ form.confirm_password.label }}
+            <div class="input-wrap">
+              <i class="fas fa-key"></i>
+              {{ form.confirm_password(placeholder="Repeat password", class="form-control" + (" error" if form.confirm_password.errors else "")) }}
+            </div>
+            {% for e in form.confirm_password.errors %}<p class="field-error"><i class="fas fa-exclamation-circle"></i>{{ e }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Personal Info -->
+      <div class="form-section">
+        <div class="section-title"><i class="fas fa-user"></i> Personal Information</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            {{ form.first_name.label }}
+            <div class="input-wrap">
+              <i class="fas fa-user"></i>
+              {{ form.first_name(placeholder="First Name", class="form-control" + (" error" if form.first_name.errors else "")) }}
+            </div>
+            {% for e in form.first_name.errors %}<p class="field-error"><i class="fas fa-exclamation-circle"></i>{{ e }}</p>{% endfor %}
+          </div>
+          <div class="form-group">
+            {{ form.last_name.label }}
+            <div class="input-wrap">
+              <i class="fas fa-user"></i>
+              {{ form.last_name(placeholder="Last Name", class="form-control" + (" error" if form.last_name.errors else "")) }}
+            </div>
+            {% for e in form.last_name.errors %}<p class="field-error"><i class="fas fa-exclamation-circle"></i>{{ e }}</p>{% endfor %}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            {{ form.date_of_birth.label }}
+            <div class="input-wrap">
+              <i class="fas fa-calendar"></i>
+              {{ form.date_of_birth(class="form-control" + (" error" if form.date_of_birth.errors else "")) }}
+            </div>
+            {% for e in form.date_of_birth.errors %}<p class="field-error"><i class="fas fa-exclamation-circle"></i>{{ e }}</p>{% endfor %}
+          </div>
+          <div class="form-group">
+            {{ form.gender.label }}
+            <div class="input-wrap">
+              <i class="fas fa-venus-mars"></i>
+              {{ form.gender(class="form-control") }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          {{ form.phone.label }}
+          <div class="input-wrap">
+            <i class="fas fa-phone"></i>
+            {{ form.phone(placeholder="e.g. 2125551234", class="form-control" + (" error" if form.phone.errors else "")) }}
+          </div>
+          {% for e in form.phone.errors %}<p class="field-error"><i class="fas fa-exclamation-circle"></i>{{ e }}</p>{% endfor %}
+        </div>
+      </div>
+
+      <!-- Address -->
+      <div class="form-section">
+        <div class="section-title"><i class="fas fa-map-marker-alt"></i> Address <span style="font-weight:400;color:var(--gray-400)">(Optional)</span></div>
+
+        <div class="form-group">
+          {{ form.address_line1.label }}
+          <div class="input-wrap"><i class="fas fa-home"></i>{{ form.address_line1(placeholder="Street address", class="form-control") }}</div>
+        </div>
+        <div class="form-group">
+          {{ form.address_line2.label }}
+          <div class="input-wrap"><i class="fas fa-building"></i>{{ form.address_line2(placeholder="Apt, suite, etc.", class="form-control") }}</div>
+        </div>
+        <div class="form-row-3">
+          <div class="form-group">
+            {{ form.city.label }}
+            <div class="input-wrap no-icon">{{ form.city(class="form-control") }}</div>
+          </div>
+          <div class="form-group">
+            {{ form.state.label }}
+            <div class="input-wrap no-icon">{{ form.state(class="form-control") }}</div>
+          </div>
+          <div class="form-group">
+            {{ form.zip_code.label }}
+            <div class="input-wrap no-icon">{{ form.zip_code(placeholder="10001", class="form-control") }}</div>
+            {% for e in form.zip_code.errors %}<p class="field-error"><i class="fas fa-exclamation-circle"></i>{{ e }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Insurance -->
+      <div class="form-section">
+        <div class="section-title"><i class="fas fa-shield-alt"></i> Insurance <span style="font-weight:400;color:var(--gray-400)">(Optional)</span></div>
+        <div class="form-row">
+          <div class="form-group">
+            {{ form.insurance_provider.label }}
+            <div class="input-wrap"><i class="fas fa-hospital"></i>{{ form.insurance_provider(placeholder="e.g. Blue Cross", class="form-control") }}</div>
+          </div>
+          <div class="form-group">
+            {{ form.insurance_id.label }}
+            <div class="input-wrap"><i class="fas fa-id-card"></i>{{ form.insurance_id(placeholder="Member ID", class="form-control") }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Default -->
+      <div class="form-section">
+        <div class="section-title"><i class="fas fa-credit-card"></i> Default Payment Method</div>
+        <div class="form-group">
+          {{ form.preferred_payment.label }}
+          <div class="input-wrap"><i class="fas fa-wallet"></i>{{ form.preferred_payment(class="form-control") }}</div>
+          <p class="field-hint">You can update this anytime from your profile.</p>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit">
+        <i class="fas fa-user-plus"></i> Create My Account
+      </button>
+
+      <div class="divider">Already registered? <a href="/auth/login">Log in →</a></div>
+    </form>
+
+  </div>
+</div>
+
+</body>
+</html>
