@@ -42,8 +42,8 @@ def login():
     # ET-In: already logged in → redirect to correct dashboard
     if current_user.is_authenticated:
         if current_user.role == "doctor":
-            return redirect(url_for("auth.register_doctor"))
-        return redirect(url_for("auth.register_patient"))
+            return redirect(url_for("dashboard.doctor_dashboard"))
+    return redirect(url_for("dashboard.patient_dashboard"))
 
     form = LoginForm()
 
@@ -145,7 +145,7 @@ def logout():
 @auth_bp.route("/register/patient", methods=["GET", "POST"])
 def register_patient():
     if current_user.is_authenticated:
-        return redirect(url_for("auth.register_patient"))
+        return redirect(url_for("dashboard.patient_dashboard"))
 
     form = RegisterPatientForm()
 
@@ -210,7 +210,7 @@ def register_patient():
 @auth_bp.route("/register/doctor", methods=["GET", "POST"])
 def register_doctor():
     if current_user.is_authenticated:
-        return redirect(url_for("auth.register_doctor"))
+        return redirect(url_for("dashboard.doctor_dashboard"))
 
     form = RegisterDoctorForm()
 
