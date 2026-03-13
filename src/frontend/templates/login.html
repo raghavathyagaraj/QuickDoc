@@ -457,7 +457,7 @@
             {% endwith %}
 
             <!-- Login Form -->
-            <form method="POST" action="/auth/login" novalidate>
+            <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
                 {{ form.hidden_tag() }}
 
                 <!-- Email -->
