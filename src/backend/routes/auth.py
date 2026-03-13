@@ -1,9 +1,9 @@
 import logging
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
-from flask_login import login_user, current_user
+from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask_login import login_user, logout_user, current_user, login_required
 from src.backend import db
 from src.backend.models.user import User, Patient, Doctor, DoctorSpecialty
-from src.backend.forms.auth_forms import RegisterPatientForm, RegisterDoctorForm
+from src.backend.forms.auth_forms import RegisterPatientForm, RegisterDoctorForm, LoginForm
 from src.backend.utils.audit import log_audit
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,111 @@ def _get_ddd_duration(specialty_id):
     if specialty:
         return longer_specialties.get(specialty.name, 30)
     return 30
+
+
+# ── 01.03 Login ────────────────────────────────────────────────────────────
+
+@auth_bp.route("/login", methods=["GET", "POST"])
+def login():
+    # ET-In: already logged in → redirect to correct dashboard
+    if current_user.is_authenticated:
+        if current_user.role == "doctor":
+            return redirect(url_for("auth.register_doctor"))
+        return redirect(url_for("auth.register_patient"))
+
+    form = LoginForm()
+
+    # DDD crosscut: pre-fill email if passed via query string (e.g. after registration)
+    if request.method == "GET" and request.args.get("email"):
+        form.email.data = request.args.get("email")
+
+    if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+        password = form.password.data
+
+        try:
+            # CN crosscut: query DB for user
+            user = User.query.filter_by(email=email).first()
+
+            # ExHL crosscut: user not found
+            if not user:
+                logger.warning("Login failed — email not found: %s", email)
+                flash("No account found with that email. Please register first.", "danger")
+                return render_template("login.html", form=form, title="Log In")
+
+            # ExHL crosscut: wrong password
+            if not user.check_password(password):
+                logger.warning("Login failed — wrong password for: %s", email)
+                # ADT: log failed login attempt
+                log_audit(
+                    action="LOGIN_FAILED",
+                    entity_type="user",
+                    entity_id=user.id,
+                    user_id=user.id,
+                    details={"email": email, "ip": request.remote_addr, "reason": "wrong_password"}
+                )
+                flash("Incorrect password. Please try again.", "danger")
+                return render_template("login.html", form=form, title="Log In")
+
+            # ExHL crosscut: inactive account
+            if not user.is_active:
+                logger.warning("Login failed — inactive account: %s", email)
+                flash("Your account has been deactivated. Please contact support.", "warning")
+                return render_template("login.html", form=form, title="Log In")
+
+            # DDD crosscut: remember_me session duration
+            login_user(user, remember=form.remember_me.data)
+
+            # ADT crosscut: log successful login
+            log_audit(
+                action="LOGIN_SUCCESS",
+                entity_type="user",
+                entity_id=user.id,
+                user_id=user.id,
+                details={"email": email, "ip": request.remote_addr, "role": user.role}
+            )
+
+            logger.info("User logged in: user_id=%s role=%s", user.id, user.role)
+            flash(f"Welcome back! You are now logged in.", "success")
+
+            # ET-In crosscut: role-based redirect
+            next_page = request.args.get("next")
+            if next_page:
+                return redirect(next_page)
+            if user.role == "doctor":
+                return redirect(url_for("auth.register_doctor"))
+            return redirect(url_for("auth.register_patient"))
+
+        except Exception as exc:
+            # ExHL crosscut: unexpected error
+            logger.error("Login error: %s", exc, exc_info=True)
+            flash("Something went wrong. Please try again.", "danger")
+
+    return render_template("login.html", form=form, title="Log In")
+
+
+# ── 01.04 Logout ───────────────────────────────────────────────────────────
+
+@auth_bp.route("/logout")
+@login_required
+def logout():
+    user_id = current_user.id
+    email = current_user.email
+    role = current_user.role
+
+    # ADT crosscut: log logout before clearing session
+    log_audit(
+        action="LOGOUT",
+        entity_type="user",
+        entity_id=user_id,
+        user_id=user_id,
+        details={"email": email, "ip": request.remote_addr, "role": role}
+    )
+
+    logout_user()
+    logger.info("User logged out: user_id=%s email=%s", user_id, email)
+    flash("You have been logged out successfully.", "info")
+    return redirect(url_for("auth.login"))
 
 
 # ── 01.01 Register Patient ─────────────────────────────────────────────────
@@ -86,10 +191,9 @@ def register_patient():
 
             logger.info("Patient registered: user_id=%s email=%s", user.id, user.email)
 
-            # Log the new user in
             login_user(user)
             flash("Welcome to QuickDoc! Your account has been created.", "success")
-            return redirect(url_for("auth.register_patient"))
+            return redirect(url_for("auth.login"))
 
         except Exception as exc:
             # ExHL crosscut: catch, log, rollback, show user-friendly message
@@ -97,7 +201,7 @@ def register_patient():
             logger.error("Patient registration failed: %s", exc, exc_info=True)
             flash("Something went wrong. Please try again or contact support.", "danger")
 
-    # CN crosscut: on GET or invalid form, just render — no external calls needed
+    # CN crosscut: on GET or invalid form, just render
     return render_template("register_patient.html", form=form, title="Register as Patient")
 
 
@@ -172,7 +276,7 @@ def register_doctor():
 
             login_user(user)
             flash("Welcome to QuickDoc! Your doctor profile is pending verification.", "success")
-            return redirect(url_for("auth.register_doctor"))
+            return redirect(url_for("auth.login"))
 
         except Exception as exc:
             # ExHL crosscut

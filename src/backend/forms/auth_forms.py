@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import (
     StringField, PasswordField, SelectField, DateField,
-    TextAreaField, DecimalField, IntegerField, HiddenField
+    TextAreaField, DecimalField, IntegerField, BooleanField
 )
 from wtforms.validators import (
     DataRequired, Email, Length, EqualTo, Regexp,
@@ -47,6 +47,22 @@ def unique_email(form, field):
     user = User.query.filter_by(email=field.data.lower()).first()
     if user:
         raise ValidationError("This email is already registered. Please log in.")
+
+
+# ── 01.03 Login ──────────────────────────────────────────────
+class LoginForm(FlaskForm):
+    # FV crosscut: email format + required
+    email = StringField("Email", validators=[
+        DataRequired(message="Email is required."),
+        Email(message="Enter a valid email address."),
+        Length(max=255)
+    ])
+    # FV crosscut: password required
+    password = PasswordField("Password", validators=[
+        DataRequired(message="Password is required.")
+    ])
+    # DDD crosscut: remember me checkbox (default off)
+    remember_me = BooleanField("Remember Me", default=False)
 
 
 # ── 01.01 Register Patient ───────────────────────────────────
