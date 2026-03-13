@@ -1154,7 +1154,7 @@
     <!-- Mobile Menu -->
     <div class="mobile-menu" id="mobileMenu">
         <div class="mobile-menu-header">
-            <a href="#" class="logo">
+            <a href="/auth/register/patient" class="logo">
                 <div class="logo-icon"><i class="fas fa-plus"></i></div>
                 <span class="logo-text">QuickDoc</span>
             </a>
@@ -1168,7 +1168,8 @@
             <li><a href="#" onclick="toggleMobileMenu()">For Providers</a></li>
             <li><a href="#" onclick="toggleMobileMenu()">About</a></li>
             <li><a href="#" onclick="toggleMobileMenu()">Log In</a></li>
-            <li><a href="#" class="btn btn-primary" onclick="toggleMobileMenu()">Sign Up</a></li>
+            <!-- UPDATED: Sign Up links to patient registration -->
+            <li><a href="/auth/register/patient" class="btn btn-primary" onclick="toggleMobileMenu()">Sign Up</a></li>
         </ul>
     </div>
 
@@ -1189,7 +1190,8 @@
                 <i class="fas fa-moon" id="themeIcon"></i>
             </button>
             <a href="#" class="btn-login">Log In</a>
-            <a href="#" class="btn btn-primary">Sign Up</a>
+            <!-- UPDATED: Sign Up links to patient registration -->
+            <a href="/auth/register/patient" class="btn btn-primary">Sign Up</a>
             <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
                 <i class="fas fa-bars"></i>
             </button>
@@ -1214,7 +1216,8 @@
                     <i class="far fa-calendar-check"></i>
                     Book an Appointment
                 </a>
-                <a href="#" class="btn btn-outline">
+                <!-- UPDATED: Join as Doctor links to doctor registration -->
+                <a href="/auth/register/doctor" class="btn btn-outline">
                     <i class="fas fa-stethoscope"></i>
                     Join as a Doctor
                 </a>
@@ -1270,11 +1273,10 @@
             <div class="hero-image-container">
                 <div class="hero-image">
                     <div class="doctors-img">
-    <img src="../static/images/male-doctor.jpg" alt="Male Doctor" class="doctor-img doctor-top">
-    <img src="../static/images/female-doctor.jpg" alt="Female Doctor" class="doctor-img doctor-bottom">
-
-</div>
-</div>
+                        <img src="../static/images/male-doctor.jpg" alt="Male Doctor" class="doctor-img doctor-top">
+                        <img src="../static/images/female-doctor.jpg" alt="Female Doctor" class="doctor-img doctor-bottom">
+                    </div>
+                </div>
                 
                 <div class="floating-card appointment">
                     <div class="icon-circle green">
@@ -1469,7 +1471,8 @@
                 <i class="far fa-calendar-check"></i>
                 Book an Appointment
             </a>
-            <a href="#" class="btn btn-outline-white">
+            <!-- UPDATED: Join as Doctor links to doctor registration -->
+            <a href="/auth/register/doctor" class="btn btn-outline-white">
                 <i class="fas fa-stethoscope"></i>
                 Join as a Doctor
             </a>
@@ -1591,7 +1594,7 @@
             
             counters.forEach(counter => {
                 const target = parseInt(counter.getAttribute('data-target'));
-                const duration = 2000; // 2 seconds
+                const duration = 2000;
                 const step = target / (duration / 16);
                 let current = 0;
 
