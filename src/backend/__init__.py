@@ -20,6 +20,8 @@ def create_app():
         template_folder=os.path.join(os.path.dirname(__file__), "../frontend/templates"),
         static_folder=os.path.join(os.path.dirname(__file__), "../frontend/static")
     )
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     # Load config directly from environment — no config package needed
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-change-in-prod")
@@ -54,5 +56,8 @@ def create_app():
 
     from src.backend.routes.auth import auth_bp
     app.register_blueprint(auth_bp, url_prefix="/auth")
+
+    from src.backend.routes.dashboard import dashboard_bp
+    app.register_blueprint(dashboard_bp, url_prefix="/dashboard")
 
     return app
