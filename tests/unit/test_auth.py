@@ -1,6 +1,7 @@
 import pytest
 import sys
 import os
+from datetime import date
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
 
 from src.backend import create_app, db
@@ -50,7 +51,7 @@ def registered_patient(app):
             user_id=user.id,
             first_name='John',
             last_name='Doe',
-            date_of_birth='1990-01-01',
+            date_of_birth=date(1990, 1, 1),
             phone='1234567890',
             preferred_payment='card'
         )
