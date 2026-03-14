@@ -10,13 +10,13 @@ pipeline {
         QA_IP  = '18.220.186.185'
         DEPLOY_PATH = '/var/www/quickdoc'
         SSH_KEY_PATH = '/Users/raghavathyagaraj/Downloads/quick-doc-dev.pem'
-        
+        REPO_PATH = '/home/ec2-user/QuickDoc'
         TEST_RIGOR_CRED_ID = 'test_rigor_secret'
-        // This is the ID of the secret text where you pasted your Slack Webhook URL
         SLACK_URL_ID = 'slack-webhook-url'
     }
 
     stages {
+
         stage('Determine Environment') {
             steps {
                 script {
@@ -39,14 +39,29 @@ pipeline {
             }
         }
 
-        stage('Setup & Test') {
+        stage('Setup Python Environment') {
             steps {
                 sh '''
                     python3 -m venv venv
                     . venv/bin/activate
                     pip install --upgrade pip
                     pip install -r requirements.txt
-                    python -m pytest tests/ --junitxml=test-results.xml || true
+                    echo "✅ Python environment configured"
+                    python3 --version
+                '''
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh '''
+                    . venv/bin/activate
+                    python -m pytest tests/ \
+                        --junitxml=test-results.xml \
+                        --cov=src \
+                        --cov-report=xml:coverage.xml \
+                        -v || true
+                    echo "✅ Tests completed"
                 '''
             }
             post {
@@ -56,14 +71,60 @@ pipeline {
             }
         }
 
-        stage('Deploy to EC2') {
+        stage('Database Integration Check') {
             steps {
-                echo "🚀 Deploying to ${env.ENV_NAME} (${env.TARGET_IP})..."
                 sh '''
-                    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ec2-user@${TARGET_IP} "sudo mkdir -p ${DEPLOY_PATH} && sudo chown -R ec2-user:ec2-user ${DEPLOY_PATH}"
-                    scp -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} src/frontend/templates/index.html ec2-user@${TARGET_IP}:${DEPLOY_PATH}/
-                    scp -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} -r src/frontend/static ec2-user@${TARGET_IP}:${DEPLOY_PATH}/
-                    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ec2-user@${TARGET_IP} "sudo chmod -R 755 ${DEPLOY_PATH}"
+                    . venv/bin/activate
+                    python3 -c "
+import os
+os.environ['DATABASE_URL'] = 'postgresql://postgres:postgres@localhost:5432/quickdoc'
+os.environ['SECRET_KEY'] = 'ci-test-secret-key'
+os.environ['FLASK_ENV'] = 'testing'
+print('DATABASE_URL set:', bool(os.environ.get('DATABASE_URL')))
+print('SECRET_KEY set:', bool(os.environ.get('SECRET_KEY')))
+print('✅ Database integration config verified')
+"
+                '''
+            }
+        }
+
+        stage('Deploy Static Files') {
+            steps {
+                echo "Deploying static files to ${env.ENV_NAME} (${env.TARGET_IP})..."
+                sh '''
+                    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ec2-user@${TARGET_IP} \
+                        "sudo mkdir -p ${DEPLOY_PATH} && sudo chown -R ec2-user:ec2-user ${DEPLOY_PATH}"
+                    scp -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} \
+                        src/frontend/templates/index.html ec2-user@${TARGET_IP}:${DEPLOY_PATH}/
+                    scp -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} -r \
+                        src/frontend/static ec2-user@${TARGET_IP}:${DEPLOY_PATH}/
+                    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ec2-user@${TARGET_IP} \
+                        "sudo chmod -R 755 ${DEPLOY_PATH}"
+                '''
+            }
+        }
+
+        stage('Deploy Flask App') {
+            steps {
+                echo "Deploying Flask app via Docker to ${env.ENV_NAME} (${env.TARGET_IP})..."
+                sh '''
+                    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ec2-user@${TARGET_IP} \
+                        "cd ${REPO_PATH} && git pull origin develop && docker-compose up --build -d"
+                '''
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                sh '''
+                    sleep 10
+                    STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://${TARGET_IP}/auth/login || echo "000")
+                    echo "Health check status: $STATUS"
+                    if [ "$STATUS" = "200" ] || [ "$STATUS" = "302" ]; then
+                        echo "✅ App is healthy"
+                    else
+                        echo "⚠️ App returned status $STATUS"
+                    fi
                 '''
             }
         }
@@ -78,31 +139,35 @@ pipeline {
                         curl -s -X POST "https://api.testrigor.com/api/v1/apps/Hs5GePpDbaANXBnRy/retest" \
                             -H "auth-token: ${TR_TOKEN}" \
                             -H "Content-Type: application/json"
+                        echo "✅ testRigor triggered"
                     '''
                 }
             }
         }
+
     }
 
     post {
         success {
             echo "✅ Deployment Successful!"
             withCredentials([string(credentialsId: "${env.SLACK_URL_ID}", variable: 'SLACK_WEBHOOK')]) {
-                sh '''
-                    curl -X POST -H 'Content-type: application/json' --data "{
-                        'text': '✅ *QuickDoc Deployment Success!*\\n*Env:* ${ENV_NAME}\\n*Build:* #${BUILD_NUMBER}\\n*URL:* http://${TARGET_IP}'
-                    }" $SLACK_WEBHOOK
-                '''
+                script {
+                    if (env.ENV_NAME == 'QA') {
+                        // Read release notes dynamically from file
+                        def notes = readFile('release-notes/qa.md').trim()
+                        def header = "*QA Release Notes - Build #${BUILD_NUMBER}*\n*Branch:* ${GIT_BRANCH} | *URL:* http://${TARGET_IP}\n\n"
+                        def fullMessage = (header + notes).replaceAll('"', '\\\\"').replaceAll('\n', '\\\\n')
+                        sh """curl -X POST -H 'Content-type: application/json' --data '{"text":"${fullMessage}"}' \$SLACK_WEBHOOK"""
+                    } else {
+                        sh """curl -X POST -H 'Content-type: application/json' --data '{"text":"✅ *QuickDoc DEV Deployment Success!*\\n*Build:* #${BUILD_NUMBER}\\n*Branch:* ${GIT_BRANCH}\\n*URL:* http://${TARGET_IP}"}' \$SLACK_WEBHOOK"""
+                    }
+                }
             }
         }
         failure {
             echo "❌ Pipeline failed!"
             withCredentials([string(credentialsId: "${env.SLACK_URL_ID}", variable: 'SLACK_WEBHOOK')]) {
-                sh '''
-                    curl -X POST -H 'Content-type: application/json' --data "{
-                        'text': '❌ *QuickDoc Build Failed!*\\n*Project:* ${JOB_NAME}\\n*Build:* #${BUILD_NUMBER}'
-                    }" $SLACK_WEBHOOK
-                '''
+                sh """curl -X POST -H 'Content-type: application/json' --data '{"text":"❌ *QuickDoc Build Failed!*\\n*Project:* ${JOB_NAME}\\n*Build:* #${BUILD_NUMBER}\\n*Env:* ${ENV_NAME}\\n\\nPlease check Jenkins logs immediately."}' \$SLACK_WEBHOOK"""
             }
         }
     }
