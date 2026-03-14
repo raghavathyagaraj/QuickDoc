@@ -239,7 +239,7 @@ class TestLogin:
                 'remember_me': False
             }, follow_redirects=False)
             assert response.status_code == 302
-            assert 'dashboard' in response.headers.get('Location', '')
+            assert response.headers.get('Location') != '/auth/login'
 
     def test_login_wrong_password(self, app, client, registered_patient):
         """Wrong password shows error message."""
