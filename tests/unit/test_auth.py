@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
 
 from src.backend import create_app, db
 from src.backend.models.user import User, Patient, Doctor, DoctorSpecialty
-
+from werkzeug.security import generate_password_hash
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -40,10 +40,10 @@ def client(app):
 
 @pytest.fixture
 def registered_patient(app):
-    """Create a registered patient user for login tests."""
     with app.app_context():
         user = User(email='patient@test.com', role='patient')
-        user.set_password('Test1234')
+        # Use pbkdf2 which works on Python 3.9
+        user.password_hash = generate_password_hash('Test1234', method='pbkdf2:sha256')
         db.session.add(user)
         db.session.flush()
         patient = Patient(
@@ -283,7 +283,7 @@ class TestLogin:
         """Inactive account is blocked from login."""
         with app.app_context():
             user = User(email='inactive@test.com', role='patient', is_active=False)
-            user.set_password('Test1234')
+            user.password_hash = generate_password_hash('Test1234', method='pbkdf2:sha256')
             db.session.add(user)
             db.session.commit()
 
