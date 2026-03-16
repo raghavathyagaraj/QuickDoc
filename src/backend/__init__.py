@@ -59,5 +59,6 @@ def create_app():
 
     from src.backend.routes.dashboard import dashboard_bp
     app.register_blueprint(dashboard_bp, url_prefix="/dashboard")
-
+    from src.backend.routes.profile import profile_bp
+    app.register_blueprint(profile_bp, url_prefix="/profile")
     return app

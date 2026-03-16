@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - QuickDoc</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #0D9488; --primary-dark: #0F766E; --primary-light: #CCFBF1; }
+        body { font-family: 'Inter', sans-serif; background: #F9FAFB; min-height: 100vh; }
+
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 5%; background: white; border-bottom: 1px solid #E5E7EB;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+        .logo-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+        .logo-text { font-size: 1.25rem; font-weight: 700; color: #111827; }
+
+        .nav-right { position: relative; }
+        .profile-btn {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid #E5E7EB;
+            background: white; cursor: pointer; font-size: 0.875rem;
+            font-family: 'Inter', sans-serif; color: #374151;
+        }
+        .dropdown {
+            position: absolute; right: 0; top: calc(100% + 8px);
+            background: white; border: 1px solid #E5E7EB; border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); min-width: 180px;
+            display: none; z-index: 200;
+        }
+        .dropdown.active { display: block; }
+        .dropdown a { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; text-decoration: none; color: #374151; font-size: 0.875rem; }
+        .dropdown a:hover { background: #F9FAFB; color: var(--primary); }
+        .dropdown a.logout { color: #EF4444; }
+        .dropdown hr { border: none; border-top: 1px solid #E5E7EB; margin: 0.25rem 0; }
+
+        .main { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .page-header h1 { font-size: 1.5rem; font-weight: 700; color: #111827; }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.625rem 1.25rem; border-radius: 8px; font-weight: 500;
+            font-size: 0.875rem; text-decoration: none; border: none;
+            cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-outline { background: white; border: 1px solid #E5E7EB; color: #374151; }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        .card { background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); padding: 2rem; margin-bottom: 1.5rem; }
+        .section-title { font-size: 0.875rem; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.25rem; padding-bottom: 0.5rem; border-bottom: 1px solid #E5E7EB; display: flex; align-items: center; gap: 0.5rem; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-group { margin-bottom: 0; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; }
+        .form-control {
+            width: 100%; padding: 0.75rem 1rem; border: 1.5px solid #E5E7EB;
+            border-radius: 10px; font-size: 0.9rem; font-family: 'Inter', sans-serif;
+            color: #111827; background: white; transition: border-color 0.2s; outline: none;
+        }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(13,148,136,0.1); }
+
+        .flash-messages { margin-bottom: 1.5rem; }
+        .flash { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; }
+        .flash.success { background: #D1FAE5; color: #065F46; }
+        .flash.danger { background: #FEE2E2; color: #991B1B; }
+
+        .form-actions { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem; }
+
+        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo">
+            <div class="logo-icon"><i class="fas fa-plus"></i></div>
+            <span class="logo-text">QuickDoc</span>
+        </a>
+        <div class="nav-right">
+            <button class="profile-btn" onclick="toggleDropdown()">
+                <i class="fas fa-user-circle" style="color: var(--primary);"></i>
+                {{ patient.first_name }} {{ patient.last_name }}
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="dropdown" id="dropdown">
+                <a href="{{ url_for('profile.patient_profile') }}"><i class="fas fa-user"></i> View Profile</a>
+                <a href="{{ url_for('profile.patient_edit') }}"><i class="fas fa-edit"></i> Edit Profile</a>
+                <a href="{{ url_for('profile.reset_password_request') }}"><i class="fas fa-key"></i> Reset Password</a>
+                <hr>
+                <a href="{{ url_for('dashboard.patient_dashboard') }}"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="{{ url_for('auth.logout') }}" class="logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">
+                            {% if category == 'success' %}<i class="fas fa-check-circle"></i>
+                            {% else %}<i class="fas fa-exclamation-circle"></i>{% endif %}
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+            <h1>Edit Profile</h1>
+            <a href="{{ url_for('profile.patient_profile') }}" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> Back to Profile
+            </a>
+        </div>
+
+        <form method="POST" action="{{ url_for('profile.patient_edit') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="card">
+                <div class="section-title"><i class="fas fa-user"></i> Personal Information</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">First Name</label>
+                        <input type="text" name="first_name" class="form-control" value="{{ patient.first_name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" name="last_name" class="form-control" value="{{ patient.last_name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <input type="text" name="phone" class="form-control" value="{{ patient.phone }}" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title"><i class="fas fa-map-marker-alt"></i> Address</div>
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label class="form-label">Address Line 1</label>
+                        <input type="text" name="address_line1" class="form-control" value="{{ patient.address_line1 or '' }}">
+                    </div>
+                    <div class="form-group full">
+                        <label class="form-label">Address Line 2</label>
+                        <input type="text" name="address_line2" class="form-control" value="{{ patient.address_line2 or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">City</label>
+                        <input type="text" name="city" class="form-control" value="{{ patient.city or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">State</label>
+                        <input type="text" name="state" class="form-control" value="{{ patient.state or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ZIP Code</label>
+                        <input type="text" name="zip_code" class="form-control" value="{{ patient.zip_code or '' }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title"><i class="fas fa-shield-alt"></i> Insurance & Payment</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Insurance Provider</label>
+                        <input type="text" name="insurance_provider" class="form-control" value="{{ patient.insurance_provider or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Insurance ID</label>
+                        <input type="text" name="insurance_id" class="form-control" value="{{ patient.insurance_id or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Preferred Payment</label>
+                        <select name="preferred_payment" class="form-control">
+                            <option value="card" {% if patient.preferred_payment == 'card' %}selected{% endif %}>Credit / Debit Card</option>
+                            <option value="insurance" {% if patient.preferred_payment == 'insurance' %}selected{% endif %}>Insurance</option>
+                            <option value="cash" {% if patient.preferred_payment == 'cash' %}selected{% endif %}>Cash</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('profile.patient_profile') }}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <script>
+        function toggleDropdown() {
+            document.getElementById('dropdown').classList.toggle('active');
+        }
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.nav-right')) {
+                document.getElementById('dropdown').classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
