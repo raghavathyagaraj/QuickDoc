@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - QuickDoc</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #0D9488; --primary-dark: #0F766E; --primary-light: #CCFBF1; }
+        body { font-family: 'Inter', sans-serif; background: #F9FAFB; min-height: 100vh; }
+
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 1rem 5%; background: white; border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; z-index: 100; }
+        .logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+        .logo-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+        .logo-text { font-size: 1.25rem; font-weight: 700; color: #111827; }
+        .nav-right { position: relative; }
+        .profile-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid #E5E7EB; background: white; cursor: pointer; font-size: 0.875rem; font-family: 'Inter', sans-serif; color: #374151; transition: all 0.2s; }
+        .profile-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .dropdown { position: absolute; right: 0; top: calc(100% + 8px); background: white; border: 1px solid #E5E7EB; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); min-width: 180px; display: none; z-index: 200; }
+        .dropdown.active { display: block; }
+        .dropdown a { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; text-decoration: none; color: #374151; font-size: 0.875rem; transition: background 0.2s; }
+        .dropdown a:hover { background: #F9FAFB; color: var(--primary); }
+        .dropdown a.logout { color: #EF4444; }
+        .dropdown a.logout:hover { background: #FEF2F2; }
+        .dropdown hr { border: none; border-top: 1px solid #E5E7EB; margin: 0.25rem 0; }
+
+        .main { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .page-header h1 { font-size: 1.5rem; font-weight: 700; color: #111827; }
+
+        .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 8px; font-weight: 500; font-size: 0.875rem; text-decoration: none; border: none; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-outline { background: white; border: 1px solid #E5E7EB; color: #374151; }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        .profile-card { background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); overflow: hidden; }
+        .profile-header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 2rem; display: flex; align-items: center; gap: 1.5rem; }
+        .avatar { width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white; border: 3px solid rgba(255,255,255,0.3); }
+        .profile-header-info h2 { font-size: 1.5rem; font-weight: 700; color: white; }
+        .profile-header-info p { color: rgba(255,255,255,0.8); font-size: 0.875rem; }
+        .badge { display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(255,255,255,0.2); color: white; padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.75rem; margin-top: 0.5rem; margin-right: 0.5rem; }
+        .badge.verified { background: rgba(16,185,129,0.3); }
+
+        .profile-body { padding: 2rem; }
+        .section { margin-bottom: 2rem; }
+        .section-title { font-size: 0.875rem; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #E5E7EB; display: flex; align-items: center; gap: 0.5rem; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .info-item { }
+        .info-label { font-size: 0.75rem; color: #9CA3AF; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+        .info-value { font-size: 0.95rem; color: #111827; font-weight: 500; }
+        .info-value.empty { color: #D1D5DB; font-style: italic; }
+
+        .flash-messages { margin-bottom: 1.5rem; }
+        .flash { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; }
+        .flash.success { background: #D1FAE5; color: #065F46; }
+        .flash.danger { background: #FEE2E2; color: #991B1B; }
+
+        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo">
+            <div class="logo-icon"><i class="fas fa-plus"></i></div>
+            <span class="logo-text">QuickDoc</span>
+        </a>
+        <div class="nav-right">
+            <button class="profile-btn" onclick="toggleDropdown()">
+                <i class="fas fa-user-md" style="color: var(--primary);"></i>
+                Dr. {{ doctor.first_name }} {{ doctor.last_name }}
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="dropdown" id="dropdown">
+                <a href="{{ url_for('profile.doctor_profile') }}"><i class="fas fa-user-md"></i> View Profile</a>
+                <a href="{{ url_for('profile.doctor_edit') }}"><i class="fas fa-edit"></i> Edit Profile</a>
+                <a href="{{ url_for('profile.reset_password_request') }}"><i class="fas fa-key"></i> Reset Password</a>
+                <hr>
+                <a href="{{ url_for('dashboard.doctor_dashboard') }}"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="{{ url_for('auth.logout') }}" class="logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">
+                            {% if category == 'success' %}<i class="fas fa-check-circle"></i>
+                            {% else %}<i class="fas fa-exclamation-circle"></i>{% endif %}
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+            <h1>My Profile</h1>
+            <a href="{{ url_for('profile.doctor_edit') }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Edit Profile
+            </a>
+        </div>
+
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="avatar"><i class="fas fa-user-md"></i></div>
+                <div class="profile-header-info">
+                    <h2>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h2>
+                    <p>{{ user.email }}</p>
+                    <div class="badge"><i class="fas fa-stethoscope"></i> {{ specialty.name if specialty else 'Doctor' }}</div>
+                    {% if doctor.is_verified %}
+                    <div class="badge verified"><i class="fas fa-check-circle"></i> Verified</div>
+                    {% else %}
+                    <div class="badge"><i class="fas fa-clock"></i> Pending Verification</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="profile-body">
+
+                <div class="section">
+                    <div class="section-title"><i class="fas fa-user"></i> Personal Information</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">First Name</div>
+                            <div class="info-value">{{ doctor.first_name }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Last Name</div>
+                            <div class="info-value">{{ doctor.last_name }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Email</div>
+                            <div class="info-value">{{ user.email }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Phone</div>
+                            <div class="info-value">{{ doctor.phone }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title"><i class="fas fa-stethoscope"></i> Professional Information</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Specialty</div>
+                            <div class="info-value">{{ specialty.name if specialty else '—' }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">License Number</div>
+                            <div class="info-value">{{ doctor.license_number }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Years of Experience</div>
+                            <div class="info-value">{{ doctor.years_experience }} years</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Consultation Fee</div>
+                            <div class="info-value">${{ "%.2f"|format(doctor.consultation_fee) if doctor.consultation_fee else '—' }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Avg Appointment Duration</div>
+                            <div class="info-value">{{ doctor.avg_appointment_duration }} minutes</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Verification Status</div>
+                            <div class="info-value">{{ 'Verified' if doctor.is_verified else 'Pending Verification' }}</div>
+                        </div>
+                    </div>
+                    {% if doctor.bio %}
+                    <div style="margin-top: 1rem;">
+                        <div class="info-label">Professional Bio</div>
+                        <div class="info-value" style="margin-top: 0.25rem; line-height: 1.6;">{{ doctor.bio }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="section">
+                    <div class="section-title"><i class="fas fa-hospital"></i> Clinic Information</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Clinic / Hospital</div>
+                            <div class="info-value {% if not doctor.clinic_name %}empty{% endif %}">{{ doctor.clinic_name or 'Not provided' }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Clinic Address</div>
+                            <div class="info-value {% if not doctor.clinic_address %}empty{% endif %}">{{ doctor.clinic_address or 'Not provided' }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">City</div>
+                            <div class="info-value {% if not doctor.city %}empty{% endif %}">{{ doctor.city or 'Not provided' }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">State</div>
+                            <div class="info-value {% if not doctor.state %}empty{% endif %}">{{ doctor.state or 'Not provided' }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">ZIP Code</div>
+                            <div class="info-value {% if not doctor.zip_code %}empty{% endif %}">{{ doctor.zip_code or 'Not provided' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleDropdown() { document.getElementById('dropdown').classList.toggle('active'); }
+        document.addEventListener('click', (e) => { if (!e.target.closest('.nav-right')) document.getElementById('dropdown').classList.remove('active'); });
+    </script>
+</body>
+</html>
