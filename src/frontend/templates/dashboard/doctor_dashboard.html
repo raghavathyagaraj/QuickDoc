@@ -10,6 +10,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --primary: #0D9488; --primary-dark: #0F766E; --primary-light: #CCFBF1; }
         body { font-family: 'Inter', sans-serif; background: #F9FAFB; min-height: 100vh; }
+
         .navbar { display: flex; justify-content: space-between; align-items: center; padding: 1rem 5%; background: white; border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; z-index: 100; }
         .logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
         .logo-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
@@ -24,22 +25,90 @@
         .dropdown a.logout { color: #EF4444; }
         .dropdown a.logout:hover { background: #FEF2F2; }
         .dropdown hr { border: none; border-top: 1px solid #E5E7EB; margin: 0.25rem 0; }
-        .main { max-width: 900px; margin: 3rem auto; padding: 0 1rem; text-align: center; }
-        .welcome-card { background: white; border-radius: 20px; padding: 3rem 2rem; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
-        .icon-circle { width: 80px; height: 80px; background: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 2rem; color: var(--primary); }
-        .badge { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--primary-light); color: var(--primary-dark); padding: 0.375rem 1rem; border-radius: 50px; font-size: 0.8rem; font-weight: 500; margin-bottom: 1rem; }
-        h1 { font-size: 1.75rem; font-weight: 700; color: #111827; margin-bottom: 0.75rem; }
-        p { color: #6B7280; font-size: 1rem; line-height: 1.6; margin-bottom: 2rem; }
-        .quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 2rem; }
-        .action-card { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 1.5rem; text-align: center; text-decoration: none; transition: all 0.2s; color: #374151; }
-        .action-card:hover { border-color: var(--primary); background: var(--primary-light); color: var(--primary); transform: translateY(-2px); }
-        .action-card i { font-size: 1.75rem; color: var(--primary); margin-bottom: 0.75rem; display: block; }
-        .action-card h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.25rem; }
-        .action-card span { font-size: 0.75rem; color: #9CA3AF; }
+
+        .main { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+
         .flash-messages { margin-bottom: 1.5rem; }
         .flash { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; }
         .flash.success { background: #D1FAE5; color: #065F46; }
         .flash.info { background: #DBEAFE; color: #1E40AF; }
+        .flash.danger { background: #FEE2E2; color: #991B1B; }
+
+        .welcome-banner { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 20px; padding: 2rem 2.5rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; color: white; }
+        .welcome-banner-left h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .welcome-banner-left p { font-size: 0.9rem; color: rgba(255,255,255,0.8); }
+        .welcome-banner-right { text-align: right; }
+        .member-since { font-size: 0.8rem; color: rgba(255,255,255,0.7); }
+        .member-badge { display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(255,255,255,0.2); padding: 0.375rem 0.875rem; border-radius: 50px; font-size: 0.8rem; margin-top: 0.5rem; margin-right: 0.35rem; }
+        .member-badge.verified { background: rgba(16,185,129,0.4); }
+
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: white; border-radius: 14px; padding: 1.25rem 1.5rem; box-shadow: 0 1px 8px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 1rem; }
+        .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
+        .stat-icon.green { background: #D1FAE5; color: #059669; }
+        .stat-icon.blue { background: #DBEAFE; color: #2563EB; }
+        .stat-icon.purple { background: #EDE9FE; color: #7C3AED; }
+        .stat-icon.teal { background: var(--primary-light); color: var(--primary); }
+        .stat-icon.orange { background: #FEF3C7; color: #D97706; }
+        .stat-info h3 { font-size: 1.1rem; font-weight: 700; color: #111827; }
+        .stat-info p { font-size: 0.75rem; color: #9CA3AF; }
+
+        .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+        .card { background: white; border-radius: 16px; box-shadow: 0 1px 8px rgba(0,0,0,0.05); overflow: hidden; }
+        .card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #F3F4F6; display: flex; justify-content: space-between; align-items: center; }
+        .card-header h2 { font-size: 1rem; font-weight: 600; color: #111827; display: flex; align-items: center; gap: 0.5rem; }
+        .card-header h2 i { color: var(--primary); }
+        .card-body { padding: 1.5rem; }
+
+        .completion-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+        .completion-label { font-size: 0.875rem; font-weight: 600; color: #374151; }
+        .completion-pct { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+        .progress-bar { width: 100%; height: 10px; background: #F3F4F6; border-radius: 50px; overflow: hidden; margin-bottom: 1.25rem; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #06B6D4); border-radius: 50px; transition: width 1s ease; }
+
+        .completion-items { display: flex; flex-direction: column; gap: 0.75rem; }
+        .completion-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 10px; background: #F9FAFB; }
+        .completion-item.done { background: #F0FDF4; }
+        .completion-item.missing { background: #FFF7ED; }
+        .completion-item i { width: 20px; text-align: center; }
+        .completion-item.done i { color: #10B981; }
+        .completion-item.missing i { color: #F59E0B; }
+        .completion-item span { font-size: 0.8rem; color: #374151; flex: 1; }
+        .completion-item .status { font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 50px; }
+        .completion-item.done .status { background: #D1FAE5; color: #065F46; }
+        .completion-item.missing .status { background: #FEF3C7; color: #92400E; }
+
+        .info-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid #F3F4F6; }
+        .info-item:last-child { border-bottom: none; }
+        .info-item i { color: var(--primary); width: 16px; margin-top: 0.125rem; flex-shrink: 0; }
+        .info-item-content { flex: 1; }
+        .info-item-label { font-size: 0.7rem; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.125rem; }
+        .info-item-value { font-size: 0.875rem; font-weight: 500; color: #111827; }
+        .info-item-value.empty { color: #D1D5DB; font-style: italic; }
+
+        .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .action-card { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 1.25rem; text-align: center; text-decoration: none; transition: all 0.2s; color: #374151; }
+        .action-card:hover { border-color: var(--primary); background: var(--primary-light); color: var(--primary); transform: translateY(-2px); }
+        .action-card i { font-size: 1.5rem; color: var(--primary); margin-bottom: 0.5rem; display: block; }
+        .action-card h3 { font-size: 0.8rem; font-weight: 600; }
+        .action-card span { font-size: 0.7rem; color: #9CA3AF; }
+
+        .activity-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid #F3F4F6; }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
+        .activity-text { font-size: 0.8rem; color: #374151; flex: 1; }
+        .activity-time { font-size: 0.7rem; color: #9CA3AF; }
+
+        .btn-link { color: var(--primary); text-decoration: none; font-size: 0.8rem; font-weight: 500; }
+        .btn-link:hover { text-decoration: underline; }
+
+        .verification-banner { background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 12px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; font-size: 0.875rem; color: #92400E; }
+
+        @media (max-width: 768px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .grid { grid-template-columns: 1fr; }
+            .welcome-banner { flex-direction: column; gap: 1rem; text-align: center; }
+        }
     </style>
 </head>
 <body>
@@ -51,7 +120,7 @@
         <div class="nav-right">
             <button class="profile-btn" onclick="toggleDropdown()">
                 <i class="fas fa-user-md" style="color: var(--primary);"></i>
-                {{ current_user.email }}
+                Dr. {{ doctor.first_name }} {{ doctor.last_name }}
                 <i class="fas fa-chevron-down"></i>
             </button>
             <div class="dropdown" id="dropdown">
@@ -63,13 +132,16 @@
             </div>
         </div>
     </nav>
+
     <div class="main">
+
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="flash-messages">
                     {% for category, message in messages %}
                         <div class="flash {{ category }}">
                             {% if category == 'success' %}<i class="fas fa-check-circle"></i>
+                            {% elif category == 'danger' %}<i class="fas fa-exclamation-circle"></i>
                             {% else %}<i class="fas fa-info-circle"></i>{% endif %}
                             {{ message }}
                         </div>
@@ -77,33 +149,242 @@
                 </div>
             {% endif %}
         {% endwith %}
-        <div class="welcome-card">
-            <div class="icon-circle"><i class="fas fa-stethoscope"></i></div>
-            <div class="badge"><i class="fas fa-check-circle"></i> Doctor Account</div>
-            <h1>Welcome, Doctor! 🎉</h1>
-            <p>Your doctor profile is set up and pending verification. Manage your profile and prepare for your first appointments.</p>
-            <div class="quick-actions">
-                <a href="{{ url_for('profile.doctor_profile') }}" class="action-card">
-                    <i class="fas fa-user-md"></i>
-                    <h3>My Profile</h3>
-                    <span>View & Edit</span>
-                </a>
-                <a href="#" class="action-card">
-                    <i class="far fa-calendar-alt"></i>
-                    <h3>My Schedule</h3>
-                    <span>Coming Soon</span>
-                </a>
-                <a href="#" class="action-card">
-                    <i class="fas fa-users"></i>
-                    <h3>My Patients</h3>
-                    <span>Coming Soon</span>
-                </a>
+
+        {% if not doctor.is_verified %}
+        <div class="verification-banner">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Your doctor profile is <strong>pending verification</strong>. Our team will review your credentials shortly.</span>
+        </div>
+        {% endif %}
+
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+            <div class="welcome-banner-left">
+                <h1>Welcome, Dr. {{ doctor.first_name }}! 👋</h1>
+                <p>Here's an overview of your QuickDoc doctor account.</p>
+            </div>
+            <div class="welcome-banner-right">
+                <div class="member-since">Member since {{ user.created_at.strftime('%B %Y') if user.created_at else 'Recently' }}</div>
+                <div class="member-badge"><i class="fas fa-stethoscope"></i> {{ specialty.name if specialty else 'Doctor' }}</div>
+                {% if doctor.is_verified %}
+                <div class="member-badge verified"><i class="fas fa-check-circle"></i> Verified</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon teal"><i class="fas fa-user-md"></i></div>
+                <div class="stat-info">
+                    <h3>{{ completion }}%</h3>
+                    <p>Profile Complete</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-stethoscope"></i></div>
+                <div class="stat-info">
+                    <h3>{{ specialty.name if specialty else '—' }}</h3>
+                    <p>Specialty</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple"><i class="fas fa-clock"></i></div>
+                <div class="stat-info">
+                    <h3>{{ doctor.avg_appointment_duration }} min</h3>
+                    <p>Avg Duration</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fas fa-dollar-sign"></i></div>
+                <div class="stat-info">
+                    <h3>${{ "%.0f"|format(doctor.consultation_fee) if doctor.consultation_fee else '—' }}</h3>
+                    <p>Consultation Fee</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid">
+
+            <!-- Left Column -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+                <!-- Profile Completion -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-tasks"></i> Profile Completion</h2>
+                        <a href="{{ url_for('profile.doctor_edit') }}" class="btn-link">Complete Profile →</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="completion-header">
+                            <span class="completion-label">Your profile is {{ completion }}% complete</span>
+                            <span class="completion-pct">{{ completion }}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                        </div>
+                        <div class="completion-items">
+                            <div class="completion-item done">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Basic Information (Name, Email)</span>
+                                <span class="status">Done</span>
+                            </div>
+                            <div class="completion-item done">
+                                <i class="fas fa-check-circle"></i>
+                                <span>License & Specialty</span>
+                                <span class="status">Done</span>
+                            </div>
+                            <div class="completion-item {{ 'done' if doctor.bio else 'missing' }}">
+                                <i class="fas {{ 'fa-check-circle' if doctor.bio else 'fa-exclamation-circle' }}"></i>
+                                <span>Professional Bio</span>
+                                <span class="status">{{ 'Done' if doctor.bio else 'Missing' }}</span>
+                            </div>
+                            <div class="completion-item {{ 'done' if doctor.clinic_name else 'missing' }}">
+                                <i class="fas {{ 'fa-check-circle' if doctor.clinic_name else 'fa-exclamation-circle' }}"></i>
+                                <span>Clinic Information</span>
+                                <span class="status">{{ 'Done' if doctor.clinic_name else 'Missing' }}</span>
+                            </div>
+                            <div class="completion-item {{ 'done' if doctor.clinic_address else 'missing' }}">
+                                <i class="fas {{ 'fa-check-circle' if doctor.clinic_address else 'fa-exclamation-circle' }}"></i>
+                                <span>Clinic Address</span>
+                                <span class="status">{{ 'Done' if doctor.clinic_address else 'Missing' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-history"></i> Recent Activity</h2>
+                    </div>
+                    <div class="card-body">
+                        {% for log in activity_logs %}
+                        <div class="activity-item">
+                            <div class="activity-dot"></div>
+                            <span class="activity-text">
+                                {% if log.action == 'LOGIN_SUCCESS' %}Logged in successfully
+                                {% elif log.action == 'REGISTER_DOCTOR' %}Doctor account created
+                                {% elif log.action == 'UPDATE_PROFILE' %}Profile updated
+                                {% elif log.action == 'VIEW_PROFILE' %}Viewed profile
+                                {% else %}{{ log.action.replace('_', ' ').title() }}{% endif %}
+                            </span>
+                            <span class="activity-time">{{ log.created_at.strftime('%b %d, %I:%M %p') if log.created_at else '' }}</span>
+                        </div>
+                        {% else %}
+                        <div class="activity-item">
+                            <div class="activity-dot"></div>
+                            <span class="activity-text">Doctor account created — Welcome to QuickDoc!</span>
+                            <span class="activity-time">{{ user.created_at.strftime('%b %d') if user.created_at else 'Today' }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+                <!-- Profile Summary -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-user-md"></i> Profile Summary</h2>
+                        <a href="{{ url_for('profile.doctor_profile') }}" class="btn-link">View →</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-item">
+                            <i class="fas fa-user"></i>
+                            <div class="info-item-content">
+                                <div class="info-item-label">Full Name</div>
+                                <div class="info-item-value">Dr. {{ doctor.first_name }} {{ doctor.last_name }}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-stethoscope"></i>
+                            <div class="info-item-content">
+                                <div class="info-item-label">Specialty</div>
+                                <div class="info-item-value">{{ specialty.name if specialty else '—' }}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-id-card"></i>
+                            <div class="info-item-content">
+                                <div class="info-item-label">License Number</div>
+                                <div class="info-item-value">{{ doctor.license_number }}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-phone"></i>
+                            <div class="info-item-content">
+                                <div class="info-item-label">Phone</div>
+                                <div class="info-item-value">{{ doctor.phone }}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-hospital"></i>
+                            <div class="info-item-content">
+                                <div class="info-item-label">Clinic</div>
+                                <div class="info-item-value {% if not doctor.clinic_name %}empty{% endif %}">{{ doctor.clinic_name or 'Not provided' }}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <div class="info-item-content">
+                                <div class="info-item-label">Location</div>
+                                <div class="info-item-value {% if not doctor.city %}empty{% endif %}">
+                                    {% if doctor.city %}{{ doctor.city }}{% if doctor.state %}, {{ doctor.state }}{% endif %}
+                                    {% else %}Not provided{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-actions">
+                            <a href="{{ url_for('profile.doctor_edit') }}" class="action-card">
+                                <i class="fas fa-edit"></i>
+                                <h3>Edit Profile</h3>
+                                <span>Update info</span>
+                            </a>
+                            <a href="{{ url_for('profile.reset_password_request') }}" class="action-card">
+                                <i class="fas fa-key"></i>
+                                <h3>Reset Password</h3>
+                                <span>Change password</span>
+                            </a>
+                            <a href="#" class="action-card">
+                                <i class="far fa-calendar-alt"></i>
+                                <h3>My Schedule</h3>
+                                <span>Coming soon</span>
+                            </a>
+                            <a href="#" class="action-card">
+                                <i class="fas fa-users"></i>
+                                <h3>My Patients</h3>
+                                <span>Coming soon</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
+
     <script>
         function toggleDropdown() { document.getElementById('dropdown').classList.toggle('active'); }
         document.addEventListener('click', (e) => { if (!e.target.closest('.nav-right')) document.getElementById('dropdown').classList.remove('active'); });
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('progressFill').style.width = '{{ completion }}%';
+            }, 300);
+        });
     </script>
 </body>
 </html>
