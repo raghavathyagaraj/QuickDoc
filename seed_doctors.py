@@ -1,258 +1,277 @@
 """
-Seed fake doctors for Sprint 2 testing.
-Run once: docker exec quickdoc-web-1 python seed_doctors.py
+Seed 1000 realistic doctors across all specialties and US cities.
+Run: docker cp seed_1000_doctors.py quickdoc-web-1:/app/seed_1000_doctors.py
+     docker exec quickdoc-web-1 python seed_1000_doctors.py
 """
 import sys
-import os
+import random
 sys.path.insert(0, '/app')
 
 from src.backend import create_app, db
 from src.backend.models.user import User, Doctor, DoctorSpecialty
-from werkzeug.security import generate_password_hash
 
 app = create_app()
 
-FAKE_DOCTORS = [
-    {
-        "email": "dr.smith@quickdoc.com",
-        "password": "Test1234",
-        "first_name": "James",
-        "last_name": "Smith",
-        "specialty": "Cardiology",
-        "license": "LIC001",
-        "experience": 15,
-        "fee": 200.00,
-        "phone": "2125550001",
-        "bio": "Board-certified cardiologist with 15 years of experience in interventional cardiology.",
-        "clinic_name": "Heart Care Center",
-        "clinic_address": "123 Main St",
-        "city": "New York",
-        "state": "NY",
-        "zip_code": "10001",
-        "is_verified": True
-    },
-    {
-        "email": "dr.patel@quickdoc.com",
-        "password": "Test1234",
-        "first_name": "Priya",
-        "last_name": "Patel",
-        "specialty": "Neurology",
-        "license": "LIC002",
-        "experience": 10,
-        "fee": 175.00,
-        "phone": "2125550002",
-        "bio": "Specialist in neurodegenerative diseases and movement disorders.",
-        "clinic_name": "NeuroHealth Clinic",
-        "clinic_address": "456 Park Ave",
-        "city": "New York",
-        "state": "NY",
-        "zip_code": "10022",
-        "is_verified": True
-    },
-    {
-        "email": "dr.johnson@quickdoc.com",
-        "password": "Test1234",
-        "first_name": "Emily",
-        "last_name": "Johnson",
-        "specialty": "Dermatology",
-        "license": "LIC003",
-        "experience": 8,
-        "fee": 150.00,
-        "phone": "2125550003",
-        "bio": "Expert in medical and cosmetic dermatology with a focus on skin cancer prevention.",
-        "clinic_name": "ClearSkin Dermatology",
-        "clinic_address": "789 Broadway",
-        "city": "Brooklyn",
-        "state": "NY",
-        "zip_code": "11201",
-        "is_verified": True
-    },
-    {
-        "email": "dr.lee@quickdoc.com",
-        "password": "Test1234",
-        "first_name": "Kevin",
-        "last_name": "Lee",
-        "specialty": "Orthopedics",
-        "license": "LIC004",
-        "experience": 12,
-        "fee": 225.00,
-        "phone": "2125550004",
-        "bio": "Orthopedic surgeon specializing in sports medicine and joint replacement.",
-        "clinic_name": "Active Orthopedics",
-        "clinic_address": "321 Lexington Ave",
-        "city": "New York",
-        "state": "NY",
-        "zip_code": "10016",
-        "is_verified": True
-    },
-    {
-        "email": "dr.garcia@quickdoc.com",
-        "password": "Test1234",
-        "first_name": "Maria",
-        "last_name": "Garcia",
-        "specialty": "Pediatrics",
-        "license": "LIC005",
-        "experience": 6,
-        "fee": 120.00,
-        "phone": "2125550005",
-        "bio": "Compassionate pediatrician dedicated to children's health from birth through adolescence.",
-        "clinic_name": "Little Stars Pediatrics",
-        "clinic_address": "555 5th Ave",
-        "city": "Queens",
-        "state": "NY",
-        "zip_code": "11354",
-        "is_verified": True
-    },
-    {
-        "email": "dr.chen@quickdoc.com",
-        "password": "Test1234",
-        "first_name": "Michael",
-        "last_name": "Chen",
-        "specialty": "General Medicine",
-        "license": "LIC006",
-        "experience": 20,
-        "fee": 100.00,
-        "phone": "2125550006",
-        "bio": "Family medicine physician providing comprehensive primary care for all ages.",
-        "clinic_name": "ChenCare Family Medicine",
-        "clinic_address": "888 Queens Blvd",
-        "city": "Queens",
-        "state": "NY",
-        "zip_code": "11373",
-        "is_verified": True
-    },
-    {
-        "email": "dr.wilson@quickdoc.com",
-        "password": "Test1234",
-        "first_name": "Sarah",
-        "last_name": "Wilson",
-        "specialty": "Gynecology",
-        "license": "LIC007",
-        "experience": 9,
-        "fee": 160.00,
-        "phone": "2125550007",
-        "bio": "OB/GYN focused on women's health, prenatal care, and minimally invasive procedures.",
-        "clinic_name": "Women's Wellness Center",
-        "clinic_address": "222 Madison Ave",
-        "city": "New York",
-        "state": "NY",
-        "zip_code": "10016",
-        "is_verified": True
-    },
-    {
-        "email": "dr.brown@quickdoc.com",
-        "password": "Test1234",
-        "first_name": "David",
-        "last_name": "Brown",
-        "specialty": "Ophthalmology",
-        "license": "LIC008",
-        "experience": 14,
-        "fee": 180.00,
-        "phone": "2125550008",
-        "bio": "Ophthalmologist specializing in LASIK surgery and treatment of retinal diseases.",
-        "clinic_name": "ClearVision Eye Center",
-        "clinic_address": "444 Park Ave South",
-        "city": "New York",
-        "state": "NY",
-        "zip_code": "10016",
-        "is_verified": False
-    },
-    {
-        "email": "dr.taylor@quickdoc.com",
-        "password": "Test1234",
-        "first_name": "Lisa",
-        "last_name": "Taylor",
-        "specialty": "ENT (Ear, Nose, Throat)",
-        "license": "LIC009",
-        "experience": 11,
-        "fee": 165.00,
-        "phone": "2125550009",
-        "bio": "ENT specialist with expertise in sinus surgery, hearing loss, and sleep disorders.",
-        "clinic_name": "Metro ENT Associates",
-        "clinic_address": "777 7th Ave",
-        "city": "New York",
-        "state": "NY",
-        "zip_code": "10019",
-        "is_verified": True
-    },
-    {
-        "email": "dr.anderson@quickdoc.com",
-        "password": "Test1234",
-        "first_name": "Robert",
-        "last_name": "Anderson",
-        "specialty": "Psychiatry",
-        "license": "LIC010",
-        "experience": 7,
-        "fee": 190.00,
-        "phone": "2125550010",
-        "bio": "Psychiatrist specializing in anxiety, depression, and cognitive behavioral therapy.",
-        "clinic_name": "MindWell Psychiatry",
-        "clinic_address": "100 Central Park West",
-        "city": "New York",
-        "state": "NY",
-        "zip_code": "10023",
-        "is_verified": True
-    },
+# ── US Cities ────────────────────────────────────────────────────────────────
+US_CITIES = [
+    ("New York", "NY", "100"), ("Los Angeles", "CA", "900"),
+    ("Chicago", "IL", "606"), ("Houston", "TX", "770"),
+    ("Phoenix", "AZ", "850"), ("Philadelphia", "PA", "191"),
+    ("San Antonio", "TX", "782"), ("San Diego", "CA", "921"),
+    ("Dallas", "TX", "752"), ("San Jose", "CA", "951"),
+    ("Austin", "TX", "787"), ("Jacksonville", "FL", "322"),
+    ("Fort Worth", "TX", "761"), ("Columbus", "OH", "432"),
+    ("Charlotte", "NC", "282"), ("Indianapolis", "IN", "462"),
+    ("San Francisco", "CA", "941"), ("Seattle", "WA", "981"),
+    ("Denver", "CO", "802"), ("Nashville", "TN", "372"),
+    ("Oklahoma City", "OK", "731"), ("El Paso", "TX", "799"),
+    ("Washington", "DC", "200"), ("Las Vegas", "NV", "891"),
+    ("Louisville", "KY", "402"), ("Memphis", "TN", "381"),
+    ("Portland", "OR", "972"), ("Baltimore", "MD", "212"),
+    ("Milwaukee", "WI", "532"), ("Albuquerque", "NM", "871"),
+    ("Tucson", "AZ", "857"), ("Fresno", "CA", "937"),
+    ("Sacramento", "CA", "958"), ("Mesa", "AZ", "852"),
+    ("Kansas City", "MO", "641"), ("Atlanta", "GA", "303"),
+    ("Omaha", "NE", "681"), ("Colorado Springs", "CO", "809"),
+    ("Raleigh", "NC", "276"), ("Long Beach", "CA", "908"),
+    ("Virginia Beach", "VA", "234"), ("Minneapolis", "MN", "554"),
+    ("Tampa", "FL", "336"), ("New Orleans", "LA", "701"),
+    ("Arlington", "TX", "760"), ("Bakersfield", "CA", "933"),
+    ("Honolulu", "HI", "968"), ("Anaheim", "CA", "928"),
+    ("Aurora", "CO", "800"), ("Santa Ana", "CA", "927"),
+    ("Boston", "MA", "021"), ("Miami", "FL", "331"),
+    ("Cleveland", "OH", "441"), ("Pittsburgh", "PA", "152"),
+    ("Detroit", "MI", "482"), ("Salt Lake City", "UT", "841"),
+    ("Richmond", "VA", "232"), ("Hartford", "CT", "061"),
+    ("Birmingham", "AL", "352"), ("Buffalo", "NY", "142"),
+    ("Rochester", "NY", "146"), ("St. Louis", "MO", "631"),
+    ("Cincinnati", "OH", "452"), ("Boise", "ID", "837"),
 ]
+
+# ── First Names ───────────────────────────────────────────────────────────────
+FIRST_NAMES_M = [
+    "James", "John", "Robert", "Michael", "William", "David", "Richard",
+    "Joseph", "Thomas", "Charles", "Christopher", "Daniel", "Matthew",
+    "Anthony", "Mark", "Donald", "Steven", "Paul", "Andrew", "Joshua",
+    "Kenneth", "Kevin", "Brian", "George", "Timothy", "Ronald", "Edward",
+    "Jason", "Jeffrey", "Ryan", "Jacob", "Gary", "Nicholas", "Eric",
+    "Jonathan", "Stephen", "Larry", "Justin", "Scott", "Brandon",
+    "Raj", "Amit", "Priya", "Wei", "Lin", "Ali", "Omar", "Amir",
+    "Carlos", "Miguel", "Juan", "Pedro", "Luis", "Hiroshi", "Kenji",
+]
+
+FIRST_NAMES_F = [
+    "Mary", "Patricia", "Jennifer", "Linda", "Barbara", "Elizabeth",
+    "Susan", "Jessica", "Sarah", "Karen", "Lisa", "Nancy", "Betty",
+    "Margaret", "Sandra", "Ashley", "Dorothy", "Kimberly", "Emily",
+    "Donna", "Michelle", "Carol", "Amanda", "Melissa", "Deborah",
+    "Stephanie", "Rebecca", "Sharon", "Laura", "Cynthia", "Kathleen",
+    "Amy", "Angela", "Shirley", "Anna", "Brenda", "Pamela", "Emma",
+    "Priya", "Ananya", "Mei", "Yuki", "Fatima", "Layla", "Sofia",
+    "Isabella", "Mia", "Charlotte", "Amara", "Zoe", "Chloe", "Ava",
+]
+
+LAST_NAMES = [
+    "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller",
+    "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez",
+    "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin",
+    "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark",
+    "Ramirez", "Lewis", "Robinson", "Walker", "Young", "Allen", "King",
+    "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores", "Green",
+    "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell",
+    "Carter", "Roberts", "Patel", "Shah", "Kumar", "Singh", "Chen",
+    "Wang", "Liu", "Zhang", "Kim", "Park", "Choi", "Yamamoto", "Tanaka",
+    "Okafor", "Mensah", "Abebe", "Hassan", "Ahmed", "Khan", "Ali",
+    "Murphy", "O'Brien", "Sullivan", "Walsh", "Kelly", "Ryan", "Burke",
+]
+
+# ── Clinic Name Templates ─────────────────────────────────────────────────────
+CLINIC_TEMPLATES = [
+    "{city} {specialty} Center", "{last_name} Medical Group",
+    "{specialty} Associates of {city}", "Advanced {specialty} Care",
+    "{city} Health & {specialty}", "Premier {specialty} Clinic",
+    "{last_name} & Associates", "{city} Medical Center",
+    "Integrated {specialty} Care", "{specialty} Institute of {city}",
+    "Metropolitan {specialty} Group", "{last_name} Healthcare",
+    "Center for {specialty}", "{city} Specialty Clinic",
+    "Regional {specialty} Associates",
+]
+
+# ── Bio Templates ─────────────────────────────────────────────────────────────
+BIO_TEMPLATES = [
+    "Board-certified {specialty} specialist with {years} years of experience serving patients in {city}. Committed to delivering compassionate, evidence-based care.",
+    "Dr. {last_name} is a highly experienced {specialty} physician with {years} years of practice. Specializes in the latest minimally invasive techniques.",
+    "Dedicated to excellence in {specialty} care, Dr. {last_name} brings {years} years of clinical expertise to patients throughout {city} and surrounding areas.",
+    "Fellowship-trained {specialty} specialist with extensive research background. Dr. {last_name} has served {city} patients for over {years} years.",
+    "Award-winning {specialty} physician recognized for patient-centered care. {years} years of experience treating complex cases in {city}.",
+    "Dr. {last_name} completed training at top academic medical centers and has dedicated {years} years to advancing {specialty} care in {city}.",
+    "Compassionate {specialty} specialist committed to improving patient outcomes. Dr. {last_name} brings {years} years of expertise to the {city} community.",
+]
+
+# ── Specialty Config ──────────────────────────────────────────────────────────
+SPECIALTY_CONFIG = {
+    "General Medicine":    {"fee_min": 80,  "fee_max": 180, "duration": 30},
+    "Cardiology":          {"fee_min": 150, "fee_max": 350, "duration": 45},
+    "Neurology":           {"fee_min": 150, "fee_max": 320, "duration": 45},
+    "Orthopedics":         {"fee_min": 160, "fee_max": 380, "duration": 45},
+    "Pediatrics":          {"fee_min": 90,  "fee_max": 220, "duration": 30},
+    "Dermatology":         {"fee_min": 120, "fee_max": 280, "duration": 30},
+    "Gynecology":          {"fee_min": 120, "fee_max": 280, "duration": 30},
+    "Ophthalmology":       {"fee_min": 130, "fee_max": 300, "duration": 30},
+    "ENT (Ear, Nose, Throat)": {"fee_min": 130, "fee_max": 290, "duration": 30},
+    "Psychiatry":          {"fee_min": 150, "fee_max": 350, "duration": 60},
+}
+
+
+def generate_doctor(index, specialty_name, specialty_config):
+    """Generate one realistic doctor record."""
+    city, state, zip_prefix = random.choice(US_CITIES)
+    is_male = random.random() > 0.45
+    first_name = random.choice(FIRST_NAMES_M if is_male else FIRST_NAMES_F)
+    last_name = random.choice(LAST_NAMES)
+    years = random.randint(2, 30)
+    fee = round(random.uniform(
+        specialty_config["fee_min"],
+        specialty_config["fee_max"]
+    ), 0)
+    zip_code = zip_prefix + str(random.randint(10, 99))
+
+    # Clinic name
+    clinic_template = random.choice(CLINIC_TEMPLATES)
+    clinic_name = clinic_template.format(
+        city=city,
+        specialty=specialty_name.split("(")[0].strip(),
+        last_name=last_name
+    )
+
+    # Bio
+    bio_template = random.choice(BIO_TEMPLATES)
+    bio = bio_template.format(
+        specialty=specialty_name,
+        last_name=last_name,
+        years=years,
+        city=city
+    )
+
+    # Street addresses
+    street_num = random.randint(100, 9999)
+    street_names = [
+        "Main St", "Oak Ave", "Maple Dr", "Park Blvd", "Medical Center Dr",
+        "Healthcare Pkwy", "University Blvd", "Central Ave", "Commerce St",
+        "Broadway", "Washington Blvd", "Lincoln Ave", "Jefferson St",
+    ]
+    address = f"{street_num} {random.choice(street_names)}"
+
+    return {
+        "email": f"dr.{first_name.lower()}.{last_name.lower()}.{index}@quickdoc-med.com",
+        "password": "Doctor1234",
+        "first_name": first_name,
+        "last_name": last_name,
+        "specialty": specialty_name,
+        "license": f"LIC{index:05d}",
+        "experience": years,
+        "fee": fee,
+        "phone": f"{random.randint(200,999)}{random.randint(200,999)}{random.randint(1000,9999)}",
+        "bio": bio,
+        "clinic_name": clinic_name,
+        "clinic_address": address,
+        "city": city,
+        "state": state,
+        "zip_code": zip_code,
+        "is_verified": random.random() > 0.15,  # 85% verified
+        "duration": specialty_config["duration"],
+    }
 
 
 def seed():
     with app.app_context():
+        specialties = {s.name: s for s in DoctorSpecialty.query.all()}
+
+        if not specialties:
+            print("❌ No specialties found! Run the app first to seed specialties.")
+            return
+
+        # Check existing count
+        existing = Doctor.query.count()
+        print(f"📊 Existing doctors: {existing}")
+
+        TARGET = 1000
+        per_specialty = TARGET // len(specialties)
+        remainder = TARGET % len(specialties)
+
+        print(f"🎯 Target: {TARGET} doctors across {len(specialties)} specialties")
+        print(f"📋 ~{per_specialty} doctors per specialty\n")
+
         seeded = 0
         skipped = 0
+        index = existing + 1000  # offset to avoid license conflicts
 
-        for doc_data in FAKE_DOCTORS:
-            # Skip if email already exists
-            if User.query.filter_by(email=doc_data["email"]).first():
-                print(f"  ⏭️  Skipping {doc_data['email']} — already exists")
-                skipped += 1
-                continue
+        for spec_name, spec_obj in specialties.items():
+            config = SPECIALTY_CONFIG.get(spec_name, {"fee_min": 100, "fee_max": 250, "duration": 30})
+            count = per_specialty + (1 if remainder > 0 else 0)
+            remainder = max(0, remainder - 1)
 
-            # Get specialty
-            specialty = DoctorSpecialty.query.filter_by(
-                name=doc_data["specialty"]
-            ).first()
-            if not specialty:
-                print(f"  ⚠️  Specialty '{doc_data['specialty']}' not found — skipping")
-                skipped += 1
-                continue
+            for _ in range(count):
+                data = generate_doctor(index, spec_name, config)
+                index += 1
 
-            # Create user
-            user = User(
-                email=doc_data["email"],
-                role="doctor",
-                is_active=True,
-                is_verified=True
-            )
-            user.set_password(doc_data["password"])
-            db.session.add(user)
-            db.session.flush()
+                # Skip if email exists
+                if User.query.filter_by(email=data["email"]).first():
+                    skipped += 1
+                    continue
 
-            # Create doctor profile
-            doctor = Doctor(
-                user_id=user.id,
-                first_name=doc_data["first_name"],
-                last_name=doc_data["last_name"],
-                specialty_id=specialty.id,
-                license_number=doc_data["license"],
-                years_experience=doc_data["experience"],
-                consultation_fee=doc_data["fee"],
-                phone=doc_data["phone"],
-                bio=doc_data["bio"],
-                clinic_name=doc_data["clinic_name"],
-                clinic_address=doc_data["clinic_address"],
-                city=doc_data["city"],
-                state=doc_data["state"],
-                zip_code=doc_data["zip_code"],
-                avg_appointment_duration=30,
-                is_verified=doc_data["is_verified"]
-            )
-            db.session.add(doctor)
-            seeded += 1
-            print(f"  ✅ Seeded Dr. {doc_data['first_name']} {doc_data['last_name']} — {doc_data['specialty']}")
+                # Skip if license exists
+                if Doctor.query.filter_by(license_number=data["license"]).first():
+                    skipped += 1
+                    continue
+
+                try:
+                    user = User(
+                        email=data["email"],
+                        role="doctor",
+                        is_active=True,
+                        is_verified=True
+                    )
+                    user.set_password(data["password"])
+                    db.session.add(user)
+                    db.session.flush()
+
+                    doctor = Doctor(
+                        user_id=user.id,
+                        first_name=data["first_name"],
+                        last_name=data["last_name"],
+                        specialty_id=spec_obj.id,
+                        license_number=data["license"],
+                        years_experience=data["experience"],
+                        consultation_fee=data["fee"],
+                        phone=data["phone"],
+                        bio=data["bio"],
+                        clinic_name=data["clinic_name"],
+                        clinic_address=data["clinic_address"],
+                        city=data["city"],
+                        state=data["state"],
+                        zip_code=data["zip_code"],
+                        avg_appointment_duration=data["duration"],
+                        is_verified=data["is_verified"]
+                    )
+                    db.session.add(doctor)
+                    seeded += 1
+
+                    # Commit in batches of 50
+                    if seeded % 50 == 0:
+                        db.session.commit()
+                        print(f"  ✅ Seeded {seeded} doctors so far...")
+
+                except Exception as e:
+                    db.session.rollback()
+                    skipped += 1
 
         db.session.commit()
-        print(f"\n✅ Done! Seeded: {seeded}, Skipped: {skipped}")
+        total = Doctor.query.count()
+        print(f"\n🎉 Done!")
+        print(f"   Seeded this run : {seeded}")
+        print(f"   Skipped         : {skipped}")
+        print(f"   Total in DB     : {total}")
 
 
 if __name__ == "__main__":
