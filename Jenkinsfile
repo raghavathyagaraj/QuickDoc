@@ -146,6 +146,43 @@ print('✅ Database integration config verified')
         }
 
     }
+    stage('Code Quality') {
+    steps {
+        sh '''
+            . venv/bin/activate
+            flake8 src/ --max-line-length=120 --exclude=venv --statistics || true
+            bandit -r src/ -ll || true
+            echo "✅ Code quality checks completed"
+        '''
+        }
+    }
+
+    post {
+    failure {
+        emailext (
+            subject: "❌ QuickDoc Build #${BUILD_NUMBER} Failed",
+            body: """
+                Build failed for QuickDoc Pipeline.
+                Branch: ${GIT_BRANCH}
+                Build: #${BUILD_NUMBER}
+                Check Jenkins: ${BUILD_URL}
+            """,
+            to: 'your-team@email.com'
+        )
+    }
+    success {
+        emailext (
+            subject: "✅ QuickDoc Build #${BUILD_NUMBER} Succeeded",
+            body: """
+                Build succeeded for QuickDoc Pipeline.
+                Branch: ${GIT_BRANCH}
+                Environment: ${ENV_NAME}
+                URL: http://${TARGET_IP}
+            """,
+            to: 'thyagaraj.raghava@pace.edu'
+        )
+    }
+    }
 
     post {
         success {
