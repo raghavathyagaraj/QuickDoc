@@ -94,10 +94,13 @@ print('✅ Database integration config verified')
                 sh '''
                     ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ec2-user@${TARGET_IP} \
                         "sudo mkdir -p ${DEPLOY_PATH} && sudo chown -R ec2-user:ec2-user ${DEPLOY_PATH}"
+
                     scp -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} \
                         src/frontend/templates/index.html ec2-user@${TARGET_IP}:${DEPLOY_PATH}/
+
                     scp -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} -r \
                         src/frontend/static ec2-user@${TARGET_IP}:${DEPLOY_PATH}/
+
                     ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ec2-user@${TARGET_IP} \
                         "sudo chmod -R 755 ${DEPLOY_PATH}"
                 '''
@@ -120,6 +123,7 @@ print('✅ Database integration config verified')
                     sleep 10
                     STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://${TARGET_IP}/auth/login || echo "000")
                     echo "Health check status: $STATUS"
+
                     if [ "$STATUS" = "200" ] || [ "$STATUS" = "302" ]; then
                         echo "✅ App is healthy"
                     else
@@ -145,43 +149,16 @@ print('✅ Database integration config verified')
             }
         }
 
-    }
-    stage('Code Quality') {
-    steps {
-        sh '''
-            . venv/bin/activate
-            flake8 src/ --max-line-length=120 --exclude=venv --statistics || true
-            bandit -r src/ -ll || true
-            echo "✅ Code quality checks completed"
-        '''
+        stage('Code Quality') {
+            steps {
+                sh '''
+                    . venv/bin/activate
+                    flake8 src/ --max-line-length=120 --exclude=venv --statistics || true
+                    bandit -r src/ -ll || true
+                    echo "✅ Code quality checks completed"
+                '''
+            }
         }
-    }
-
-    post {
-    failure {
-        emailext (
-            subject: "❌ QuickDoc Build #${BUILD_NUMBER} Failed",
-            body: """
-                Build failed for QuickDoc Pipeline.
-                Branch: ${GIT_BRANCH}
-                Build: #${BUILD_NUMBER}
-                Check Jenkins: ${BUILD_URL}
-            """,
-            to: 'your-team@email.com'
-        )
-    }
-    success {
-        emailext (
-            subject: "✅ QuickDoc Build #${BUILD_NUMBER} Succeeded",
-            body: """
-                Build succeeded for QuickDoc Pipeline.
-                Branch: ${GIT_BRANCH}
-                Environment: ${ENV_NAME}
-                URL: http://${TARGET_IP}
-            """,
-            to: 'thyagaraj.raghava@pace.edu'
-        )
-    }
     }
 
     post {
@@ -190,21 +167,25 @@ print('✅ Database integration config verified')
             withCredentials([string(credentialsId: "${env.SLACK_URL_ID}", variable: 'SLACK_WEBHOOK')]) {
                 script {
                     if (env.ENV_NAME == 'QA') {
-                        // Read release notes dynamically from file
                         def notes = readFile('release-notes/qa.md').trim()
                         def header = "*QA Release Notes - Build #${BUILD_NUMBER}*\n*Branch:* ${GIT_BRANCH} | *URL:* http://${TARGET_IP}\n\n"
                         def fullMessage = (header + notes).replaceAll('"', '\\\\"').replaceAll('\n', '\\\\n')
-                        sh """curl -X POST -H 'Content-type: application/json' --data '{"text":"${fullMessage}"}' \$SLACK_WEBHOOK"""
+
+                        sh """curl -X POST -H 'Content-type: application/json' \
+                        --data '{"text":"${fullMessage}"}' \$SLACK_WEBHOOK"""
                     } else {
-                        sh """curl -X POST -H 'Content-type: application/json' --data '{"text":"✅ *QuickDoc DEV Deployment Success!*\\n*Build:* #${BUILD_NUMBER}\\n*Branch:* ${GIT_BRANCH}\\n*URL:* http://${TARGET_IP}"}' \$SLACK_WEBHOOK"""
+                        sh """curl -X POST -H 'Content-type: application/json' \
+                        --data '{"text":"✅ *QuickDoc DEV Deployment Success!*\\n*Build:* #${BUILD_NUMBER}\\n*Branch:* ${GIT_BRANCH}\\n*URL:* http://${TARGET_IP}"}' \$SLACK_WEBHOOK"""
                     }
                 }
             }
         }
+
         failure {
             echo "❌ Pipeline failed!"
             withCredentials([string(credentialsId: "${env.SLACK_URL_ID}", variable: 'SLACK_WEBHOOK')]) {
-                sh """curl -X POST -H 'Content-type: application/json' --data '{"text":"❌ *QuickDoc Build Failed!*\\n*Project:* ${JOB_NAME}\\n*Build:* #${BUILD_NUMBER}\\n*Env:* ${ENV_NAME}\\n\\nPlease check Jenkins logs immediately."}' \$SLACK_WEBHOOK"""
+                sh """curl -X POST -H 'Content-type: application/json' \
+                --data '{"text":"❌ *QuickDoc Build Failed!*\\n*Project:* ${JOB_NAME}\\n*Build:* #${BUILD_NUMBER}\\n*Env:* ${ENV_NAME}\\n\\nPlease check Jenkins logs immediately."}' \$SLACK_WEBHOOK"""
             }
         }
     }
