@@ -61,4 +61,6 @@ def create_app():
     app.register_blueprint(dashboard_bp, url_prefix="/dashboard")
     from src.backend.routes.profile import profile_bp
     app.register_blueprint(profile_bp, url_prefix="/profile")
+    from src.backend.routes.search import search_bp
+    app.register_blueprint(search_bp, url_prefix="/search")
     return app
