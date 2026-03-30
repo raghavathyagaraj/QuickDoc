@@ -135,7 +135,7 @@ print('✅ Database integration config verified')
 
         stage('testRigor Integration') {
             when {
-                expression { env.ENV_NAME == 'QA' }
+                expression { env.ENV_NAME == 'develop' }
             }
             steps {
                 withCredentials([string(credentialsId: env.TEST_RIGOR_CRED_ID, variable: 'TR_TOKEN')]) {
