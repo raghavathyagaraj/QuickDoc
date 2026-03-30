@@ -71,6 +71,18 @@ pipeline {
             }
         }
 
+        stage('Code Quality') {
+            steps {
+                sh '''
+                    . venv/bin/activate
+                    pip install flake8 bandit --quiet
+                    flake8 src/ --max-line-length=120 --exclude=venv --statistics || true
+                    bandit -r src/ -ll || true
+                    echo "✅ Code quality checks completed"
+                '''
+            }
+        }
+
         stage('Database Integration Check') {
             steps {
                 sh '''
@@ -123,7 +135,6 @@ print('✅ Database integration config verified')
                     sleep 10
                     STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://${TARGET_IP}/auth/login || echo "000")
                     echo "Health check status: $STATUS"
-
                     if [ "$STATUS" = "200" ] || [ "$STATUS" = "302" ]; then
                         echo "✅ App is healthy"
                     else
@@ -135,7 +146,7 @@ print('✅ Database integration config verified')
 
         stage('testRigor Integration') {
             when {
-                expression { env.ENV_NAME == 'develop' }
+                expression { env.ENV_NAME == 'DEV' || env.ENV_NAME == 'QA' }
             }
             steps {
                 withCredentials([string(credentialsId: env.TEST_RIGOR_CRED_ID, variable: 'TR_TOKEN')]) {
@@ -149,16 +160,6 @@ print('✅ Database integration config verified')
             }
         }
 
-        stage('Code Quality') {
-            steps {
-                sh '''
-                    . venv/bin/activate
-                    flake8 src/ --max-line-length=120 --exclude=venv --statistics || true
-                    bandit -r src/ -ll || true
-                    echo "✅ Code quality checks completed"
-                '''
-            }
-        }
     }
 
     post {
@@ -170,7 +171,6 @@ print('✅ Database integration config verified')
                         def notes = readFile('release-notes/qa.md').trim()
                         def header = "*QA Release Notes - Build #${BUILD_NUMBER}*\n*Branch:* ${GIT_BRANCH} | *URL:* http://${TARGET_IP}\n\n"
                         def fullMessage = (header + notes).replaceAll('"', '\\\\"').replaceAll('\n', '\\\\n')
-
                         sh """curl -X POST -H 'Content-type: application/json' \
                         --data '{"text":"${fullMessage}"}' \$SLACK_WEBHOOK"""
                     } else {
