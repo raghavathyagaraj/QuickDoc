@@ -144,11 +144,16 @@
         .testimonial-card { background: var(--white); border-radius: 16px; padding: 2rem; text-align: left; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); transition: all 0.3s; }
         .testimonial-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); }
         .quote-icon { font-size: 2rem; color: var(--primary); margin-bottom: 1rem; font-family: Georgia, serif; }
-        .testimonial-card > p { font-size: 0.95rem; color: var(--gray-600); line-height: 1.7; margin-bottom: 1.5rem; }
+        .testimonial-card > p { font-size: 0.95rem; color: var(--gray-600); line-height: 1.7; margin-bottom: 1rem; }
         .testimonial-author { display: flex; align-items: center; gap: 0.75rem; }
         .author-avatar { width: 44px; height: 44px; background: linear-gradient(135deg, var(--primary-light), var(--gray-200)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
         .author-info h4 { font-size: 0.9rem; font-weight: 600; color: var(--dark); }
         .author-info span { font-size: 0.8rem; color: var(--gray-500); }
+        /* Star rating in testimonials */
+        .review-stars { display: flex; gap: 2px; margin-bottom: 0.75rem; }
+        .review-stars i { font-size: 0.85rem; color: #FCD34D; }
+        .review-stars i.empty { color: #E5E7EB; }
+        .real-badge { display: inline-flex; align-items: center; gap: 0.3rem; background: var(--primary-light); color: var(--primary-dark); padding: 0.2rem 0.5rem; border-radius: 50px; font-size: 0.7rem; font-weight: 600; margin-bottom: 0.75rem; }
 
         .cta { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); padding: 5rem 5%; text-align: center; }
         .cta h2 { font-size: 2.25rem; font-weight: 700; color: white; margin-bottom: 1rem; }
@@ -260,47 +265,28 @@
                 <span class="highlight" id="typingText"></span><span class="typing-cursor"></span>
             </h1>
             <p class="hero-subtitle" data-aos="fade-up" data-aos-delay="300">Find top-rated doctors, book appointments instantly, and take control of your healthcare journey — all in one place.</p>
-
             <div class="hero-buttons" data-aos="fade-up" data-aos-delay="400">
-                <a href="/search" class="btn btn-primary">
-                    <i class="far fa-calendar-check"></i> Book an Appointment
-                </a>
-                <a href="/auth/register/doctor" class="btn btn-outline">
-                    <i class="fas fa-stethoscope"></i> Join as a Doctor
-                </a>
+                <a href="/search" class="btn btn-primary"><i class="far fa-calendar-check"></i> Book an Appointment</a>
+                <a href="/auth/register/doctor" class="btn btn-outline"><i class="fas fa-stethoscope"></i> Join as a Doctor</a>
             </div>
-
             <form class="search-bar" action="/search" method="GET" data-aos="fade-up" data-aos-delay="500">
                 <div class="search-input">
                     <i class="fas fa-search"></i>
                     <input type="text" name="q" placeholder="Specialty or doctor name" id="searchInput" oninput="showAutocomplete()" autocomplete="off">
                     <div class="autocomplete-dropdown" id="autocompleteDropdown">
-                        <div class="autocomplete-item" onclick="selectSpecialty('Cardiology')">
-                            <i class="fas fa-heartbeat"></i><span>Cardiology</span>
-                        </div>
-                        <div class="autocomplete-item" onclick="selectSpecialty('Neurology')">
-                            <i class="fas fa-brain"></i><span>Neurology</span>
-                        </div>
-                        <div class="autocomplete-item" onclick="selectSpecialty('Orthopedics')">
-                            <i class="fas fa-bone"></i><span>Orthopedics</span>
-                        </div>
-                        <div class="autocomplete-item" onclick="selectSpecialty('Pediatrics')">
-                            <i class="fas fa-baby"></i><span>Pediatrics</span>
-                        </div>
-                        <div class="autocomplete-item" onclick="selectSpecialty('General Medicine')">
-                            <i class="fas fa-user-md"></i><span>General Medicine</span>
-                        </div>
+                        <div class="autocomplete-item" onclick="selectSpecialty('Cardiology')"><i class="fas fa-heartbeat"></i><span>Cardiology</span></div>
+                        <div class="autocomplete-item" onclick="selectSpecialty('Neurology')"><i class="fas fa-brain"></i><span>Neurology</span></div>
+                        <div class="autocomplete-item" onclick="selectSpecialty('Orthopedics')"><i class="fas fa-bone"></i><span>Orthopedics</span></div>
+                        <div class="autocomplete-item" onclick="selectSpecialty('Pediatrics')"><i class="fas fa-baby"></i><span>Pediatrics</span></div>
+                        <div class="autocomplete-item" onclick="selectSpecialty('General Medicine')"><i class="fas fa-user-md"></i><span>General Medicine</span></div>
                     </div>
                 </div>
                 <div class="search-input">
                     <i class="fas fa-map-marker-alt"></i>
                     <input type="text" name="location" placeholder="City or Zip code">
                 </div>
-                <button type="submit" class="btn btn-primary btn-search">
-                    Search <i class="fas fa-arrow-right"></i>
-                </button>
+                <button type="submit" class="btn btn-primary btn-search">Search <i class="fas fa-arrow-right"></i></button>
             </form>
-
             <div class="reviews-badge" data-aos="fade-up" data-aos-delay="600">
                 <div class="avatar-group">
                     <img src="https://i.pravatar.cc/100?img=1" alt="User">
@@ -310,7 +296,6 @@
                 <p class="reviews-text"><span>4.9</span> from 12,000+ reviews</p>
             </div>
         </div>
-
         <div class="hero-visual" data-aos="fade-left" data-aos-delay="400">
             <div class="hero-image-container">
                 <div class="hero-image">
@@ -359,91 +344,90 @@
         <h2 class="section-title" data-aos="fade-up" data-aos-delay="100">Browse by specialty</h2>
         <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200">Find the right specialist for your needs from our network of certified professionals.</p>
         <div class="specialties-grid">
-            <a href="/search?specialty=Cardiology" class="specialty-card" data-aos="zoom-in" data-aos-delay="100">
-                <div class="specialty-icon"><i class="fas fa-heartbeat"></i></div>
-                <h3>Cardiology</h3><p>240+ doctors</p>
-            </a>
-            <a href="/search?specialty=Neurology" class="specialty-card" data-aos="zoom-in" data-aos-delay="150">
-                <div class="specialty-icon"><i class="fas fa-brain"></i></div>
-                <h3>Neurology</h3><p>185+ doctors</p>
-            </a>
-            <a href="/search?specialty=Orthopedics" class="specialty-card" data-aos="zoom-in" data-aos-delay="200">
-                <div class="specialty-icon"><i class="fas fa-bone"></i></div>
-                <h3>Orthopedics</h3><p>310+ doctors</p>
-            </a>
-            <a href="/search?specialty=Ophthalmology" class="specialty-card" data-aos="zoom-in" data-aos-delay="250">
-                <div class="specialty-icon"><i class="fas fa-eye"></i></div>
-                <h3>Ophthalmology</h3><p>168+ doctors</p>
-            </a>
-            <a href="/search?specialty=Pediatrics" class="specialty-card" data-aos="zoom-in" data-aos-delay="300">
-                <div class="specialty-icon"><i class="fas fa-baby"></i></div>
-                <h3>Pediatrics</h3><p>290+ doctors</p>
-            </a>
-            <a href="/search?specialty=Dermatology" class="specialty-card" data-aos="zoom-in" data-aos-delay="350">
-                <div class="specialty-icon"><i class="fas fa-ribbon"></i></div>
-                <h3>Dermatology</h3><p>210+ doctors</p>
-            </a>
-            <a href="/search?specialty=General Medicine" class="specialty-card" data-aos="zoom-in" data-aos-delay="400">
-                <div class="specialty-icon"><i class="fas fa-user-md"></i></div>
-                <h3>General Medicine</h3><p>450+ doctors</p>
-            </a>
-            <a href="/search?specialty=Psychiatry" class="specialty-card" data-aos="zoom-in" data-aos-delay="450">
-                <div class="specialty-icon"><i class="fas fa-brain"></i></div>
-                <h3>Psychiatry</h3><p>320+ doctors</p>
-            </a>
+            <a href="/search?specialty=Cardiology" class="specialty-card" data-aos="zoom-in" data-aos-delay="100"><div class="specialty-icon"><i class="fas fa-heartbeat"></i></div><h3>Cardiology</h3><p>240+ doctors</p></a>
+            <a href="/search?specialty=Neurology" class="specialty-card" data-aos="zoom-in" data-aos-delay="150"><div class="specialty-icon"><i class="fas fa-brain"></i></div><h3>Neurology</h3><p>185+ doctors</p></a>
+            <a href="/search?specialty=Orthopedics" class="specialty-card" data-aos="zoom-in" data-aos-delay="200"><div class="specialty-icon"><i class="fas fa-bone"></i></div><h3>Orthopedics</h3><p>310+ doctors</p></a>
+            <a href="/search?specialty=Ophthalmology" class="specialty-card" data-aos="zoom-in" data-aos-delay="250"><div class="specialty-icon"><i class="fas fa-eye"></i></div><h3>Ophthalmology</h3><p>168+ doctors</p></a>
+            <a href="/search?specialty=Pediatrics" class="specialty-card" data-aos="zoom-in" data-aos-delay="300"><div class="specialty-icon"><i class="fas fa-baby"></i></div><h3>Pediatrics</h3><p>290+ doctors</p></a>
+            <a href="/search?specialty=Dermatology" class="specialty-card" data-aos="zoom-in" data-aos-delay="350"><div class="specialty-icon"><i class="fas fa-ribbon"></i></div><h3>Dermatology</h3><p>210+ doctors</p></a>
+            <a href="/search?specialty=General Medicine" class="specialty-card" data-aos="zoom-in" data-aos-delay="400"><div class="specialty-icon"><i class="fas fa-user-md"></i></div><h3>General Medicine</h3><p>450+ doctors</p></a>
+            <a href="/search?specialty=Psychiatry" class="specialty-card" data-aos="zoom-in" data-aos-delay="450"><div class="specialty-icon"><i class="fas fa-brain"></i></div><h3>Psychiatry</h3><p>320+ doctors</p></a>
         </div>
     </section>
 
     <section class="stats" id="stats">
         <div class="stats-container">
-            <div class="stat-item" data-aos="fade-up" data-aos-delay="100">
-                <h3><span class="counter" data-target="5000">0</span>+</h3>
-                <p>Verified Doctors<br>Across all specialties</p>
-            </div>
-            <div class="stat-item" data-aos="fade-up" data-aos-delay="200">
-                <h3><span class="counter" data-target="120">0</span>K+</h3>
-                <p>Patients Served<br>And growing every day</p>
-            </div>
-            <div class="stat-item" data-aos="fade-up" data-aos-delay="300">
-                <h3><span class="counter" data-target="98">0</span>%</h3>
-                <p>Satisfaction Rate<br>From patient reviews</p>
-            </div>
-            <div class="stat-item" data-aos="fade-up" data-aos-delay="400">
-                <h3>24/7</h3>
-                <p>Availability<br>Book anytime, anywhere</p>
-            </div>
+            <div class="stat-item" data-aos="fade-up" data-aos-delay="100"><h3><span class="counter" data-target="5000">0</span>+</h3><p>Verified Doctors<br>Across all specialties</p></div>
+            <div class="stat-item" data-aos="fade-up" data-aos-delay="200"><h3><span class="counter" data-target="120">0</span>K+</h3><p>Patients Served<br>And growing every day</p></div>
+            <div class="stat-item" data-aos="fade-up" data-aos-delay="300"><h3><span class="counter" data-target="98">0</span>%</h3><p>Satisfaction Rate<br>From patient reviews</p></div>
+            <div class="stat-item" data-aos="fade-up" data-aos-delay="400"><h3>24/7</h3><p>Availability<br>Book anytime, anywhere</p></div>
         </div>
     </section>
 
+    <!-- TESTIMONIALS — Dynamic from DB, fallback to static if no reviews -->
     <section class="testimonials" id="testimonials">
         <p class="section-label" data-aos="fade-up">TESTIMONIALS</p>
         <h2 class="section-title" data-aos="fade-up" data-aos-delay="100">Loved by patients & doctors</h2>
         <p class="section-subtitle" data-aos="fade-up" data-aos-delay="200" style="margin-bottom: 3rem;">See what our community has to say about their experience.</p>
         <div class="testimonials-grid">
-            <div class="testimonial-card" data-aos="fade-up" data-aos-delay="300">
-                <div class="quote-icon">❝</div>
-                <p>QuickDoc made finding a specialist incredibly easy. I booked a cardiologist in under a minute and received a reminder the day before. Truly life-changing!</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">👩</div>
-                    <div class="author-info"><h4>Emily Rodriguez</h4><span>Patient</span></div>
+
+            {% if reviews %}
+                {% for review, patient, doctor, specialty in reviews %}
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 + 200 }}">
+                    <div class="real-badge"><i class="fas fa-check-circle"></i> Verified Review</div>
+                    <div class="review-stars">
+                        {% for i in range(1, 6) %}
+                        <i class="fas fa-star {% if i > review.rating %}empty{% endif %}"></i>
+                        {% endfor %}
+                    </div>
+                    <div class="quote-icon">❝</div>
+                    <p>{{ review.body[:180] }}{% if review.body|length > 180 %}...{% endif %}</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">👤</div>
+                        <div class="author-info">
+                            <h4>{{ patient.first_name }} {{ patient.last_name[0] }}.</h4>
+                            <span>Patient{% if specialty %} &bull; {{ specialty.name }}{% endif %}</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="testimonial-card" data-aos="fade-up" data-aos-delay="400">
-                <div class="quote-icon">❝</div>
-                <p>As a doctor, QuickDoc has streamlined my practice. My schedule is organized, no-shows dropped by 40%, and I can focus on what matters – my patients.</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">👨‍⚕️</div>
-                    <div class="author-info"><h4>Dr. James Chen</h4><span>Cardiologist</span></div>
+                {% endfor %}
+
+                {% for i in range(reviews|length, 3) %}
+                <!-- Fallback card if fewer than 3 real reviews -->
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="{{ (i+1) * 100 + 200 }}">
+                    <div class="quote-icon">❝</div>
+                    {% if i == 0 %}
+                    <p>QuickDoc made finding a specialist incredibly easy. I booked a cardiologist in under a minute. Truly life-changing!</p>
+                    <div class="testimonial-author"><div class="author-avatar">👩</div><div class="author-info"><h4>Emily R.</h4><span>Patient</span></div></div>
+                    {% elif i == 1 %}
+                    <p>As a doctor, QuickDoc has streamlined my practice. My schedule is organized and I can focus on what matters — my patients.</p>
+                    <div class="testimonial-author"><div class="author-avatar">👨‍⚕️</div><div class="author-info"><h4>Dr. James C.</h4><span>Cardiologist</span></div></div>
+                    {% else %}
+                    <p>I love being able to see reviews from other patients before booking. It gives me confidence in choosing the right doctor.</p>
+                    <div class="testimonial-author"><div class="author-avatar">👩</div><div class="author-info"><h4>Sarah T.</h4><span>Patient</span></div></div>
+                    {% endif %}
                 </div>
-            </div>
-            <div class="testimonial-card" data-aos="fade-up" data-aos-delay="500">
-                <div class="quote-icon">❝</div>
-                <p>I love being able to see reviews from other patients before booking. It gives me confidence in choosing the right doctor for my family.</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">👩</div>
-                    <div class="author-info"><h4>Sarah Thompson</h4><span>Patient</span></div>
+                {% endfor %}
+
+            {% else %}
+                <!-- Static fallback when no reviews in DB -->
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="quote-icon">❝</div>
+                    <p>QuickDoc made finding a specialist incredibly easy. I booked a cardiologist in under a minute and received a reminder the day before. Truly life-changing!</p>
+                    <div class="testimonial-author"><div class="author-avatar">👩</div><div class="author-info"><h4>Emily Rodriguez</h4><span>Patient</span></div></div>
                 </div>
-            </div>
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="quote-icon">❝</div>
+                    <p>As a doctor, QuickDoc has streamlined my practice. My schedule is organized, no-shows dropped by 40%, and I can focus on what matters – my patients.</p>
+                    <div class="testimonial-author"><div class="author-avatar">👨‍⚕️</div><div class="author-info"><h4>Dr. James Chen</h4><span>Cardiologist</span></div></div>
+                </div>
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="500">
+                    <div class="quote-icon">❝</div>
+                    <p>I love being able to see reviews from other patients before booking. It gives me confidence in choosing the right doctor for my family.</p>
+                    <div class="testimonial-author"><div class="author-avatar">👩</div><div class="author-info"><h4>Sarah Thompson</h4><span>Patient</span></div></div>
+                </div>
+            {% endif %}
+
         </div>
     </section>
 
@@ -465,48 +449,13 @@
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-brand">
-                <a href="/" class="logo">
-                    <div class="logo-icon"><i class="fas fa-plus"></i></div>
-                    <span class="logo-text">QuickDoc</span>
-                </a>
+                <a href="/" class="logo"><div class="logo-icon"><i class="fas fa-plus"></i></div><span class="logo-text">QuickDoc</span></a>
                 <p>Connecting patients with top-rated doctors. Book appointments instantly, 24/7.</p>
             </div>
-            <div class="footer-links">
-                <h4>Product</h4>
-                <ul>
-                    <li><a href="/search">Find a Doctor</a></li>
-                    <li><a href="/search">Book Appointment</a></li>
-                    <li><a href="#specialties">Specialties</a></li>
-                    <li><a href="#">Pricing</a></li>
-                </ul>
-            </div>
-            <div class="footer-links">
-                <h4>Company</h4>
-                <ul>
-                    <li><a href="#">About Us</a></li>
-                    <li><a href="#">Careers</a></li>
-                    <li><a href="#">Press</a></li>
-                    <li><a href="#">Contact</a></li>
-                </ul>
-            </div>
-            <div class="footer-links">
-                <h4>Resources</h4>
-                <ul>
-                    <li><a href="#">Blog</a></li>
-                    <li><a href="#">Help Center</a></li>
-                    <li><a href="#">Patient Guide</a></li>
-                    <li><a href="#">API Docs</a></li>
-                </ul>
-            </div>
-            <div class="footer-links">
-                <h4>Legal</h4>
-                <ul>
-                    <li><a href="#">Privacy Policy</a></li>
-                    <li><a href="#">Terms of Service</a></li>
-                    <li><a href="#">Cookie Policy</a></li>
-                    <li><a href="#">HIPAA</a></li>
-                </ul>
-            </div>
+            <div class="footer-links"><h4>Product</h4><ul><li><a href="/search">Find a Doctor</a></li><li><a href="/search">Book Appointment</a></li><li><a href="#specialties">Specialties</a></li><li><a href="#">Pricing</a></li></ul></div>
+            <div class="footer-links"><h4>Company</h4><ul><li><a href="#">About Us</a></li><li><a href="#">Careers</a></li><li><a href="#">Press</a></li><li><a href="#">Contact</a></li></ul></div>
+            <div class="footer-links"><h4>Resources</h4><ul><li><a href="#">Blog</a></li><li><a href="#">Help Center</a></li><li><a href="#">Patient Guide</a></li><li><a href="#">API Docs</a></li></ul></div>
+            <div class="footer-links"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="#">Cookie Policy</a></li><li><a href="#">HIPAA</a></li></ul></div>
         </div>
         <div class="footer-bottom"><p>© 2024 QuickDoc. All rights reserved.</p></div>
     </footer>
@@ -521,11 +470,7 @@
         const textToType = 'Simplified';
         let charIndex = 0;
         function typeText() {
-            if (charIndex < textToType.length) {
-                typingText.textContent += textToType.charAt(charIndex);
-                charIndex++;
-                setTimeout(typeText, 100);
-            }
+            if (charIndex < textToType.length) { typingText.textContent += textToType.charAt(charIndex); charIndex++; setTimeout(typeText, 100); }
         }
         setTimeout(typeText, 1000);
 
@@ -534,37 +479,19 @@
                 const target = parseInt(counter.getAttribute('data-target'));
                 const step = target / (2000 / 16);
                 let current = 0;
-                const update = () => {
-                    current += step;
-                    if (current < target) { counter.textContent = Math.floor(current).toLocaleString(); requestAnimationFrame(update); }
-                    else { counter.textContent = target.toLocaleString(); }
-                };
+                const update = () => { current += step; if (current < target) { counter.textContent = Math.floor(current).toLocaleString(); requestAnimationFrame(update); } else { counter.textContent = target.toLocaleString(); } };
                 update();
             });
         }
-
         let counterAnimated = false;
-        new IntersectionObserver((entries) => {
-            entries.forEach(entry => { if (entry.isIntersecting && !counterAnimated) { animateCounters(); counterAnimated = true; } });
-        }, { threshold: 0.5 }).observe(document.getElementById('stats'));
+        new IntersectionObserver((entries) => { entries.forEach(entry => { if (entry.isIntersecting && !counterAnimated) { animateCounters(); counterAnimated = true; } }); }, { threshold: 0.5 }).observe(document.getElementById('stats'));
 
         function toggleTheme() {
-            const body = document.body;
-            const themeIcon = document.getElementById('themeIcon');
-            if (body.getAttribute('data-theme') === 'dark') {
-                body.removeAttribute('data-theme');
-                themeIcon.classList.replace('fa-sun', 'fa-moon');
-                localStorage.setItem('theme', 'light');
-            } else {
-                body.setAttribute('data-theme', 'dark');
-                themeIcon.classList.replace('fa-moon', 'fa-sun');
-                localStorage.setItem('theme', 'dark');
-            }
+            const body = document.body; const themeIcon = document.getElementById('themeIcon');
+            if (body.getAttribute('data-theme') === 'dark') { body.removeAttribute('data-theme'); themeIcon.classList.replace('fa-sun', 'fa-moon'); localStorage.setItem('theme', 'light'); }
+            else { body.setAttribute('data-theme', 'dark'); themeIcon.classList.replace('fa-moon', 'fa-sun'); localStorage.setItem('theme', 'dark'); }
         }
-        if (localStorage.getItem('theme') === 'dark') {
-            document.body.setAttribute('data-theme', 'dark');
-            document.getElementById('themeIcon').classList.replace('fa-moon', 'fa-sun');
-        }
+        if (localStorage.getItem('theme') === 'dark') { document.body.setAttribute('data-theme', 'dark'); document.getElementById('themeIcon').classList.replace('fa-moon', 'fa-sun'); }
 
         function toggleMobileMenu() { document.getElementById('mobileMenu').classList.toggle('active'); }
 
@@ -572,15 +499,8 @@
             const val = document.getElementById('searchInput').value;
             document.getElementById('autocompleteDropdown').classList.toggle('active', val.length > 0);
         }
-
-        // UPDATED: redirect to search page when specialty selected
-        function selectSpecialty(specialty) {
-            window.location.href = '/search?specialty=' + encodeURIComponent(specialty);
-        }
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.search-input')) document.getElementById('autocompleteDropdown').classList.remove('active');
-        });
+        function selectSpecialty(specialty) { window.location.href = '/search?specialty=' + encodeURIComponent(specialty); }
+        document.addEventListener('click', (e) => { if (!e.target.closest('.search-input')) document.getElementById('autocompleteDropdown').classList.remove('active'); });
 
         const backToTopBtn = document.getElementById('backToTop');
         window.addEventListener('scroll', () => backToTopBtn.classList.toggle('visible', window.scrollY > 500));

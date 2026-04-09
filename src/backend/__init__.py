@@ -65,4 +65,7 @@ def create_app():
     app.register_blueprint(search_bp, url_prefix="/search")
     from src.backend.routes.social import social_bp
     app.register_blueprint(social_bp, url_prefix="/social")
+    from src.backend.routes.home import home_bp
+    app.register_blueprint(home_bp)
+    
     return app
