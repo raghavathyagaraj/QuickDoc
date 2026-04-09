@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask_login import login_required, current_user
-from src.backend.models.user import Patient, Doctor, DoctorSpecialty, AuditLog
+from src.backend import db
+from src.backend.models.user import Patient, Doctor, DoctorSpecialty, AuditLog, Favorite
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -30,17 +31,36 @@ def _calc_doctor_completion(doctor):
 def patient_dashboard():
     if current_user.role != "patient":
         return redirect(url_for("dashboard.doctor_dashboard"))
+
     patient = Patient.query.filter_by(user_id=current_user.id).first()
     if not patient:
         return redirect(url_for("auth.register_patient"))
+
     completion = _calc_patient_completion(patient)
+
     activity_logs = AuditLog.query.filter_by(
         user_id=current_user.id
     ).order_by(AuditLog.created_at.desc()).limit(5).all()
+
+    # Load favorites with doctor and specialty info
+    favorites = db.session.query(Favorite, Doctor, DoctorSpecialty)\
+        .join(Doctor, Doctor.id == Favorite.doctor_id)\
+        .outerjoin(DoctorSpecialty, DoctorSpecialty.id == Doctor.specialty_id)\
+        .filter(Favorite.patient_id == patient.id)\
+        .order_by(Favorite.created_at.desc())\
+        .limit(5).all()
+
+    # Total favorites count (not limited to 5)
+    favorites_count = Favorite.query.filter_by(patient_id=patient.id).count()
+
     return render_template(
         "dashboard/patient_dashboard.html",
-        patient=patient, user=current_user,
-        completion=completion, activity_logs=activity_logs
+        patient=patient,
+        user=current_user,
+        completion=completion,
+        activity_logs=activity_logs,
+        favorites=favorites,
+        favorites_count=favorites_count
     )
 
 
@@ -49,16 +69,23 @@ def patient_dashboard():
 def doctor_dashboard():
     if current_user.role != "doctor":
         return redirect(url_for("dashboard.patient_dashboard"))
+
     doctor = Doctor.query.filter_by(user_id=current_user.id).first()
     if not doctor:
         return redirect(url_for("auth.register_doctor"))
+
     specialty = DoctorSpecialty.query.get(doctor.specialty_id)
     completion = _calc_doctor_completion(doctor)
+
     activity_logs = AuditLog.query.filter_by(
         user_id=current_user.id
     ).order_by(AuditLog.created_at.desc()).limit(5).all()
+
     return render_template(
         "dashboard/doctor_dashboard.html",
-        doctor=doctor, specialty=specialty, user=current_user,
-        completion=completion, activity_logs=activity_logs
+        doctor=doctor,
+        specialty=specialty,
+        user=current_user,
+        completion=completion,
+        activity_logs=activity_logs
     )
