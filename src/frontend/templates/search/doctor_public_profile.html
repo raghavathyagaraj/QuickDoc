@@ -15,14 +15,22 @@
         .logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
         .logo-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
         .logo-text { font-size: 1.25rem; font-weight: 700; color: #111827; }
+        .nav-right { display: flex; align-items: center; gap: 1rem; }
+        .back-link { color: var(--primary); text-decoration: none; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; }
 
         .main { max-width: 900px; margin: 2rem auto; padding: 0 1.5rem; }
-        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--primary); text-decoration: none; font-size: 0.875rem; font-weight: 500; margin-bottom: 1.5rem; }
-        .back-link:hover { text-decoration: underline; }
+
+        /* Flash */
+        .flash-messages { margin-bottom: 1.5rem; }
+        .flash { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; }
+        .flash.success { background: #D1FAE5; color: #065F46; }
+        .flash.danger  { background: #FEE2E2; color: #991B1B; }
+        .flash.warning { background: #FEF3C7; color: #92400E; }
+        .flash.info    { background: #DBEAFE; color: #1E40AF; }
 
         /* Hero Card */
         .hero-card { background: white; border-radius: 20px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 1.5rem; }
-        .hero-header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 2.5rem; display: flex; gap: 2rem; align-items: center; }
+        .hero-header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 2.5rem; display: flex; gap: 2rem; align-items: center; position: relative; }
         .hero-avatar { width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 4px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white; flex-shrink: 0; }
         .hero-info h1 { font-size: 1.75rem; font-weight: 700; color: white; margin-bottom: 0.375rem; }
         .hero-info p { color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-bottom: 0.75rem; }
@@ -30,36 +38,95 @@
         .hero-badge { display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(255,255,255,0.2); color: white; padding: 0.3rem 0.75rem; border-radius: 50px; font-size: 0.75rem; }
         .hero-badge.verified { background: rgba(16,185,129,0.35); }
 
-        .hero-body { padding: 2rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+        /* Favorite Button */
+        .fav-btn {
+            position: absolute; top: 1.5rem; right: 1.5rem;
+            width: 48px; height: 48px; border-radius: 50%;
+            background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4);
+            color: white; font-size: 1.25rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; backdrop-filter: blur(4px);
+        }
+        .fav-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+        .fav-btn.favorited { background: #EF4444; border-color: #EF4444; }
+        .fav-btn.favorited i { color: white; }
+
+        .hero-body { padding: 2rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
         .stat-item { text-align: center; }
-        .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+        .stat-value { font-size: 1.4rem; font-weight: 700; color: var(--primary); }
         .stat-label { font-size: 0.75rem; color: #9CA3AF; margin-top: 0.25rem; }
 
-        /* Info Sections */
+        /* Stars */
+        .stars { display: flex; align-items: center; justify-content: center; gap: 2px; }
+        .star { color: #FCD34D; font-size: 1rem; }
+        .star.empty { color: #E5E7EB; }
+
+        /* Cards */
         .card { background: white; border-radius: 16px; box-shadow: 0 1px 8px rgba(0,0,0,0.05); padding: 1.75rem; margin-bottom: 1.5rem; }
         .section-title { font-size: 1rem; font-weight: 700; color: #111827; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid #F3F4F6; }
         .section-title i { color: var(--primary); }
 
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .info-item { }
-        .info-label { font-size: 0.7rem; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
-        .info-value { font-size: 0.9rem; font-weight: 500; color: #111827; }
-        .info-value.empty { color: #D1D5DB; font-style: italic; }
-
+        .info-item .info-label { font-size: 0.7rem; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+        .info-item .info-value { font-size: 0.9rem; font-weight: 500; color: #111827; }
+        .info-item .info-value.empty { color: #D1D5DB; font-style: italic; }
         .bio-text { font-size: 0.9rem; color: #374151; line-height: 1.7; }
 
-        /* Book CTA */
+        /* Review Form */
+        .review-form { background: #F9FAFB; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #E5E7EB; }
+        .review-form h3 { font-size: 0.95rem; font-weight: 600; color: #111827; margin-bottom: 1rem; }
+
+        .star-input { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .star-input label { font-size: 1.75rem; cursor: pointer; color: #E5E7EB; transition: color 0.1s; }
+        .star-input input[type="radio"] { display: none; }
+        .star-input label:hover,
+        .star-input label:hover ~ label,
+        .star-input input[type="radio"]:checked ~ label { color: #FCD34D; }
+        /* Reverse order trick */
+        .star-input { flex-direction: row-reverse; justify-content: flex-end; }
+        .star-input label:hover,
+        .star-input label:hover ~ label { color: #FCD34D; }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.375rem; }
+        .form-control { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid #E5E7EB; border-radius: 10px; font-size: 0.875rem; font-family: 'Inter', sans-serif; color: #111827; outline: none; transition: border-color 0.2s; }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(13,148,136,0.1); }
+        textarea.form-control { resize: vertical; min-height: 100px; }
+        .btn-submit-review { padding: 0.75rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 0.875rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-submit-review:hover { background: var(--primary-dark); }
+
+        /* Review Cards */
+        .review-card { padding: 1.25rem; border-radius: 12px; background: #F9FAFB; margin-bottom: 1rem; border: 1px solid #E5E7EB; }
+        .review-card:last-child { margin-bottom: 0; }
+        .review-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+        .reviewer-info h4 { font-size: 0.875rem; font-weight: 600; color: #111827; }
+        .reviewer-info span { font-size: 0.75rem; color: #9CA3AF; }
+        .review-stars { display: flex; gap: 2px; }
+        .review-stars i { font-size: 0.875rem; color: #FCD34D; }
+        .review-stars i.empty { color: #E5E7EB; }
+        .review-title { font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; }
+        .review-body { font-size: 0.85rem; color: #6B7280; line-height: 1.6; }
+
+        .empty-reviews { text-align: center; padding: 2rem; color: #9CA3AF; }
+        .empty-reviews i { font-size: 2rem; display: block; margin-bottom: 0.75rem; }
+        .empty-reviews p { font-size: 0.875rem; }
+
+        /* CTA */
         .book-cta { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 16px; padding: 2rem; text-align: center; color: white; margin-bottom: 1.5rem; }
         .book-cta h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
         .book-cta p { font-size: 0.875rem; color: rgba(255,255,255,0.8); margin-bottom: 1.5rem; }
         .btn-book-large { display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.875rem 2rem; background: white; color: var(--primary-dark); border-radius: 10px; font-size: 1rem; font-weight: 700; text-decoration: none; transition: all 0.2s; }
-        .btn-book-large:hover { background: rgba(255,255,255,0.9); transform: translateY(-1px); }
-        .btn-back-search { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; background: rgba(255,255,255,0.15); color: white; border-radius: 8px; font-size: 0.875rem; text-decoration: none; margin-left: 0.75rem; }
+        .btn-book-large:hover { transform: translateY(-1px); }
+
+        /* Toast notification */
+        .toast { position: fixed; bottom: 2rem; right: 2rem; background: #111827; color: white; padding: 0.875rem 1.25rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500; display: none; align-items: center; gap: 0.75rem; z-index: 999; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .toast.show { display: flex; }
+        .toast.success { background: #065F46; }
+        .toast.error { background: #991B1B; }
 
         @media (max-width: 640px) {
             .hero-header { flex-direction: column; text-align: center; }
-            .hero-badges { justify-content: center; }
-            .hero-body { grid-template-columns: repeat(3, 1fr); }
+            .hero-body { grid-template-columns: repeat(2, 1fr); }
             .info-grid { grid-template-columns: 1fr; }
         }
     </style>
@@ -70,16 +137,30 @@
             <div class="logo-icon"><i class="fas fa-plus"></i></div>
             <span class="logo-text">QuickDoc</span>
         </a>
-        <a href="{{ url_for('auth.logout') }}" style="color: #6B7280; text-decoration: none; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;">
-            <i class="fas fa-sign-out-alt"></i> Log Out
-        </a>
+        <div class="nav-right">
+            <a href="{{ url_for('search.search') }}" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Search
+            </a>
+        </div>
     </nav>
 
     <div class="main">
 
-        <a href="{{ url_for('search.search') }}" class="back-link">
-            <i class="fas fa-arrow-left"></i> Back to Search
-        </a>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">
+                            {% if category == 'success' %}<i class="fas fa-check-circle"></i>
+                            {% elif category == 'danger' %}<i class="fas fa-exclamation-circle"></i>
+                            {% elif category == 'warning' %}<i class="fas fa-exclamation-triangle"></i>
+                            {% else %}<i class="fas fa-info-circle"></i>{% endif %}
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
 
         <!-- Hero -->
         <div class="hero-card">
@@ -93,16 +174,26 @@
                         <span class="hero-badge"><i class="fas fa-stethoscope"></i> {{ specialty.name }}</span>
                         {% endif %}
                         {% if doctor.is_verified %}
-                        <span class="hero-badge verified"><i class="fas fa-check-circle"></i> Verified Doctor</span>
-                        {% else %}
-                        <span class="hero-badge"><i class="fas fa-clock"></i> Pending Verification</span>
+                        <span class="hero-badge verified"><i class="fas fa-check-circle"></i> Verified</span>
                         {% endif %}
                         {% if doctor.city %}
                         <span class="hero-badge"><i class="fas fa-map-marker-alt"></i> {{ doctor.city }}{% if doctor.state %}, {{ doctor.state }}{% endif %}</span>
                         {% endif %}
+                        {% if doctor.avg_rating %}
+                        <span class="hero-badge"><i class="fas fa-star" style="color:#FCD34D;"></i> {{ doctor.avg_rating }} ({{ doctor.review_count }} reviews)</span>
+                        {% endif %}
                     </div>
                 </div>
+
+                <!-- 02.04 Favorites Button -->
+                <button class="fav-btn {% if is_favorited %}favorited{% endif %}"
+                        id="favBtn"
+                        onclick="toggleFavorite({{ doctor.id }})"
+                        title="{% if is_favorited %}Remove from favorites{% else %}Add to favorites{% endif %}">
+                    <i class="fas fa-heart"></i>
+                </button>
             </div>
+
             <div class="hero-body">
                 <div class="stat-item">
                     <div class="stat-value">${{ "%.0f"|format(doctor.consultation_fee) if doctor.consultation_fee else '—' }}</div>
@@ -110,11 +201,24 @@
                 </div>
                 <div class="stat-item">
                     <div class="stat-value">{{ doctor.avg_appointment_duration }} min</div>
-                    <div class="stat-label">Avg Visit Duration</div>
+                    <div class="stat-label">Avg Duration</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value">{{ doctor.years_experience }}+</div>
-                    <div class="stat-label">Years Experience</div>
+                    <div class="stat-label">Years Exp.</div>
+                </div>
+                <div class="stat-item">
+                    {% if doctor.avg_rating %}
+                    <div class="stat-value">{{ doctor.avg_rating }}</div>
+                    <div class="stars">
+                        {% for i in range(1, 6) %}
+                        <i class="fas fa-star star {% if i > doctor.avg_rating %}empty{% endif %}"></i>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="stat-value">—</div>
+                    {% endif %}
+                    <div class="stat-label">Avg Rating</div>
                 </div>
             </div>
         </div>
@@ -176,20 +280,100 @@
                     <div class="info-value {% if not doctor.city %}empty{% endif %}">{{ doctor.city or 'Not provided' }}</div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">State</div>
-                    <div class="info-value {% if not doctor.state %}empty{% endif %}">{{ doctor.state or 'Not provided' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">ZIP Code</div>
-                    <div class="info-value {% if not doctor.zip_code %}empty{% endif %}">{{ doctor.zip_code or 'Not provided' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Phone</div>
-                    <div class="info-value">{{ doctor.phone }}</div>
+                    <div class="info-label">State / ZIP</div>
+                    <div class="info-value {% if not doctor.state %}empty{% endif %}">
+                        {{ doctor.state or '' }}{% if doctor.zip_code %} {{ doctor.zip_code }}{% endif %}
+                    </div>
                 </div>
             </div>
         </div>
         {% endif %}
+
+        <!-- 05.01 Submit Review -->
+        {% if not has_reviewed %}
+        <div class="card">
+            <div class="section-title"><i class="fas fa-star"></i> Write a Review</div>
+            <div class="review-form">
+                <h3>Share your experience with Dr. {{ doctor.last_name }}</h3>
+                <form method="POST" action="{{ url_for('social.submit_review', doctor_id=doctor.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="form-group">
+                        <label class="form-label">Your Rating *</label>
+                        <div class="star-input">
+                            <input type="radio" id="s5" name="rating" value="5">
+                            <label for="s5"><i class="fas fa-star"></i></label>
+                            <input type="radio" id="s4" name="rating" value="4">
+                            <label for="s4"><i class="fas fa-star"></i></label>
+                            <input type="radio" id="s3" name="rating" value="3">
+                            <label for="s3"><i class="fas fa-star"></i></label>
+                            <input type="radio" id="s2" name="rating" value="2">
+                            <label for="s2"><i class="fas fa-star"></i></label>
+                            <input type="radio" id="s1" name="rating" value="1">
+                            <label for="s1"><i class="fas fa-star"></i></label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Review Title (optional)</label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g. Excellent doctor, very thorough" maxlength="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Your Review *</label>
+                        <textarea name="body" class="form-control" placeholder="Share your experience... (minimum 10 characters)" minlength="10" maxlength="1000" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit-review">
+                        <i class="fas fa-paper-plane"></i> Submit Review
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="section-title"><i class="fas fa-star"></i> Your Review</div>
+            <div style="background: #F0FDF4; border: 1px solid #86EFAC; border-radius: 10px; padding: 1rem 1.25rem; font-size: 0.875rem; color: #166534;">
+                <i class="fas fa-check-circle"></i> You have already reviewed Dr. {{ doctor.last_name }}.
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Reviews List -->
+        <div class="card">
+            <div class="section-title">
+                <i class="fas fa-comments"></i>
+                Patient Reviews
+                <span style="margin-left: auto; font-size: 0.8rem; font-weight: 400; color: #9CA3AF;">{{ reviews|length }} review{{ 's' if reviews|length != 1 else '' }}</span>
+            </div>
+
+            {% if reviews %}
+                {% for review in reviews %}
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <h4>{{ review.patient.first_name }} {{ review.patient.last_name[0] }}.</h4>
+                            <span>{{ review.created_at.strftime('%B %d, %Y') }}</span>
+                        </div>
+                        <div class="review-stars">
+                            {% for i in range(1, 6) %}
+                            <i class="fas fa-star {% if i > review.rating %}empty{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% if review.title %}
+                    <div class="review-title">{{ review.title }}</div>
+                    {% endif %}
+                    <div class="review-body">{{ review.body }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="empty-reviews">
+                <i class="far fa-comment-dots"></i>
+                <p>No reviews yet — be the first to review Dr. {{ doctor.last_name }}!</p>
+            </div>
+            {% endif %}
+        </div>
 
         <!-- Book CTA -->
         <div class="book-cta">
@@ -198,11 +382,55 @@
             <a href="#" class="btn-book-large">
                 <i class="far fa-calendar-plus"></i> Book Appointment
             </a>
-            <a href="{{ url_for('search.search') }}" class="btn-back-search">
-                <i class="fas fa-search"></i> Back to Search
-            </a>
         </div>
 
     </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        function toggleFavorite(doctorId) {
+            const btn = document.getElementById('favBtn');
+            fetch(`/social/favorite/${doctorId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    showToast(data.error, 'error');
+                    return;
+                }
+                if (data.favorited) {
+                    btn.classList.add('favorited');
+                    btn.title = 'Remove from favorites';
+                } else {
+                    btn.classList.remove('favorited');
+                    btn.title = 'Add to favorites';
+                }
+                showToast(data.message, 'success');
+            })
+            .catch(() => showToast('Something went wrong', 'error'));
+        }
+
+        function showToast(msg, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Star rating interaction
+        const stars = document.querySelectorAll('.star-input label');
+        stars.forEach(star => {
+            star.addEventListener('mouseover', function() {
+                const val = this.previousElementSibling?.value || this.getAttribute('for').replace('s','');
+            });
+        });
+    </script>
 </body>
 </html>
