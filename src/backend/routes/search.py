@@ -1,38 +1,27 @@
 import logging
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify
+from flask import Blueprint, render_template, redirect, url_for, request
 from flask_login import login_required, current_user
-from sqlalchemy import or_, func
+from sqlalchemy import or_
 from src.backend import db
-from src.backend.models.user import Doctor, DoctorSpecialty, Patient, User
+from src.backend.models.user import Doctor, DoctorSpecialty, Patient, User, Favorite, Review
 from src.backend.utils.audit import log_audit
 
 logger = logging.getLogger(__name__)
 search_bp = Blueprint("search", __name__)
 
 
-# ── 02.01 / 02.02 / 02.03 — Unified Doctor Search ─────────────────────────
-
 @search_bp.route("/")
 @login_required
 def search():
-    """
-    Unified search handling specialty, location and name.
-    ET-In: login required, patient only.
-    CA: results are query-driven (no heavy caching needed at this scale).
-    PF: single joined query for performance.
-    """
-    # ET-In: only patients can search for doctors
     if current_user.role != "patient":
         return redirect(url_for("dashboard.doctor_dashboard"))
 
-    # FV: sanitize inputs
-    query_text  = request.args.get("q", "").strip()
-    specialty   = request.args.get("specialty", "").strip()
-    location    = request.args.get("location", "").strip()
-    sort_by     = request.args.get("sort", "name")  # name | fee | experience
+    query_text = request.args.get("q", "").strip()
+    specialty  = request.args.get("specialty", "").strip()
+    location   = request.args.get("location", "").strip()
+    sort_by    = request.args.get("sort", "name")
 
     try:
-        # Base query — join Doctor → User → Specialty
         base = (
             db.session.query(Doctor, DoctorSpecialty, User)
             .join(User, User.id == Doctor.user_id)
@@ -40,35 +29,23 @@ def search():
             .filter(User.is_active == True)
         )
 
-        # 02.01 — Search by Specialty (DS crosscut)
         if specialty:
-            base = base.filter(
-                DoctorSpecialty.name.ilike(f"%{specialty}%")
-            )
-
-        # 02.02 — Search by Location
+            base = base.filter(DoctorSpecialty.name.ilike(f"%{specialty}%"))
         if location:
-            base = base.filter(
-                or_(
-                    Doctor.city.ilike(f"%{location}%"),
-                    Doctor.state.ilike(f"%{location}%"),
-                    Doctor.zip_code.ilike(f"%{location}%"),
-                    Doctor.clinic_address.ilike(f"%{location}%")
-                )
-            )
-
-        # 02.03 — Search by Name
+            base = base.filter(or_(
+                Doctor.city.ilike(f"%{location}%"),
+                Doctor.state.ilike(f"%{location}%"),
+                Doctor.zip_code.ilike(f"%{location}%"),
+                Doctor.clinic_address.ilike(f"%{location}%")
+            ))
         if query_text:
-            base = base.filter(
-                or_(
-                    Doctor.first_name.ilike(f"%{query_text}%"),
-                    Doctor.last_name.ilike(f"%{query_text}%"),
-                    DoctorSpecialty.name.ilike(f"%{query_text}%"),
-                    Doctor.clinic_name.ilike(f"%{query_text}%")
-                )
-            )
+            base = base.filter(or_(
+                Doctor.first_name.ilike(f"%{query_text}%"),
+                Doctor.last_name.ilike(f"%{query_text}%"),
+                DoctorSpecialty.name.ilike(f"%{query_text}%"),
+                Doctor.clinic_name.ilike(f"%{query_text}%")
+            ))
 
-        # Sorting — PF crosscut
         if sort_by == "fee":
             base = base.order_by(Doctor.consultation_fee.asc())
         elif sort_by == "experience":
@@ -78,25 +55,25 @@ def search():
 
         results = base.all()
 
-        # ADT crosscut — log search
+        # CA crosscut — load patient favorites once for O(1) lookup
+        patient = Patient.query.filter_by(user_id=current_user.id).first()
+        fav_doctor_ids = set()
+        if patient:
+            favs = Favorite.query.filter_by(patient_id=patient.id).all()
+            fav_doctor_ids = {f.doctor_id for f in favs}
+
         log_audit(
             action="DOCTOR_SEARCH",
             entity_type="search",
             entity_id=None,
             user_id=current_user.id,
-            details={
-                "q": query_text,
-                "specialty": specialty,
-                "location": location,
-                "results_count": len(results),
-                "ip": request.remote_addr
-            }
+            details={"q": query_text, "specialty": specialty,
+                     "location": location, "results_count": len(results),
+                     "ip": request.remote_addr}
         )
 
-        # DS crosscut — all specialties for filter sidebar
         specialties = DoctorSpecialty.query.order_by(DoctorSpecialty.name).all()
 
-        # ER crosscut — enrich results with computed fields
         enriched = []
         for doctor, spec, user in results:
             enriched.append({
@@ -106,6 +83,9 @@ def search():
                 "is_verified": doctor.is_verified,
                 "has_bio": bool(doctor.bio),
                 "location_display": _format_location(doctor),
+                "is_favorited": doctor.id in fav_doctor_ids,
+                "avg_rating": doctor.avg_rating,
+                "review_count": doctor.review_count,
             })
 
         return render_template(
@@ -117,69 +97,75 @@ def search():
             selected_location=location,
             sort_by=sort_by,
             result_count=len(results),
-            patient=Patient.query.filter_by(user_id=current_user.id).first()
+            patient=patient
         )
 
     except Exception as exc:
-        # ExHL crosscut
         logger.error("Search failed: %s", exc, exc_info=True)
         return render_template(
             "search/search_results.html",
-            results=[],
-            specialties=DoctorSpecialty.query.order_by(DoctorSpecialty.name).all(),
-            query_text=query_text,
-            selected_specialty=specialty,
-            selected_location=location,
-            sort_by=sort_by,
+            results=[], specialties=DoctorSpecialty.query.all(),
+            query_text=query_text, selected_specialty=specialty,
+            selected_location=location, sort_by=sort_by,
             result_count=0,
             error="Search is temporarily unavailable. Please try again.",
             patient=Patient.query.filter_by(user_id=current_user.id).first()
         )
 
 
-# ── 02.06 — View Doctor Public Profile ─────────────────────────────────────
-
 @search_bp.route("/doctor/<int:doctor_id>")
 @login_required
 def doctor_public_profile(doctor_id):
-    """
-    Public-facing doctor profile for patients.
-    ET-In: login required.
-    ER: enrichment — verified badge, specialty details.
-    DF-In: receives doctor_id from search results.
-    """
     if current_user.role != "patient":
         return redirect(url_for("dashboard.doctor_dashboard"))
 
-    try:
-        doctor = Doctor.query.get_or_404(doctor_id)
-        user   = User.query.get(doctor.user_id)
-        specialty = DoctorSpecialty.query.get(doctor.specialty_id)
+    doctor   = Doctor.query.get_or_404(doctor_id)
+    user     = User.query.get(doctor.user_id)
+    specialty = DoctorSpecialty.query.get(doctor.specialty_id)
+    patient  = Patient.query.filter_by(user_id=current_user.id).first()
 
-        log_audit(
-            action="VIEW_DOCTOR_PUBLIC_PROFILE",
-            entity_type="doctor",
-            entity_id=doctor_id,
-            user_id=current_user.id,
-            details={"ip": request.remote_addr}
-        )
+    # CA — check favorite status
+    is_favorited = False
+    if patient:
+        is_favorited = Favorite.query.filter_by(
+            patient_id=patient.id, doctor_id=doctor_id
+        ).first() is not None
 
-        patient = Patient.query.filter_by(user_id=current_user.id).first()
+    # Check if patient already reviewed
+    has_reviewed = False
+    if patient:
+        has_reviewed = Review.query.filter_by(
+            patient_id=patient.id, doctor_id=doctor_id
+        ).first() is not None
 
-        return render_template(
-            "search/doctor_public_profile.html",
-            doctor=doctor,
-            user=user,
-            specialty=specialty,
-            patient=patient
-        )
+    # Load reviews with patient info
+    reviews = db.session.query(Review, Patient)\
+        .join(Patient, Patient.id == Review.patient_id)\
+        .filter(Review.doctor_id == doctor_id)\
+        .order_by(Review.created_at.desc())\
+        .all()
 
-    except Exception as exc:
-        logger.error("Doctor profile view failed: %s", exc, exc_info=True)
-        return redirect(url_for("search.search"))
+    # Flatten for template
+    review_list = []
+    for review, pat in reviews:
+        review.patient = pat
+        review_list.append(review)
 
+    log_audit(
+        action="VIEW_DOCTOR_PUBLIC_PROFILE",
+        entity_type="doctor",
+        entity_id=doctor_id,
+        user_id=current_user.id,
+        details={"ip": request.remote_addr}
+    )
 
-# ── Helper ──────────────────────────────────────────────────────────────────
+    return render_template(
+        "search/doctor_public_profile.html",
+        doctor=doctor, user=user, specialty=specialty,
+        patient=patient, is_favorited=is_favorited,
+        has_reviewed=has_reviewed, reviews=review_list
+    )
+
 
 def _format_location(doctor):
     parts = [p for p in [doctor.city, doctor.state] if p]

@@ -10,24 +10,19 @@ def load_user(user_id):
 
 
 class User(UserMixin, db.Model):
-    """
-    Core user model — DF-Out crosscut: feeds all modules.
-    ET-In crosscut: role controls feature access.
-    """
     __tablename__ = "users"
 
     id            = db.Column(db.Integer, primary_key=True)
     email         = db.Column(db.String(255), nullable=False, unique=True, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
-    role          = db.Column(db.String(50), nullable=False)  # patient | doctor | ...
+    role          = db.Column(db.String(50), nullable=False)
     is_active     = db.Column(db.Boolean, default=True)
     is_verified   = db.Column(db.Boolean, default=False)
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at    = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
     patient_profile = db.relationship("Patient", backref="user", uselist=False, lazy=True)
-    doctor_profile  = db.relationship("Doctor", backref="user", uselist=False, lazy=True)
+    doctor_profile  = db.relationship("Doctor",  backref="user", uselist=False, lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
@@ -35,18 +30,14 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def is_patient(self):
-        return self.role == "patient"
-
-    def is_doctor(self):
-        return self.role == "doctor"
+    def is_patient(self): return self.role == "patient"
+    def is_doctor(self):  return self.role == "doctor"
 
     def __repr__(self):
         return f"<User {self.email} [{self.role}]>"
 
 
 class DoctorSpecialty(db.Model):
-    """DS crosscut — specialties lookup table."""
     __tablename__ = "doctor_specialties"
 
     id          = db.Column(db.Integer, primary_key=True)
@@ -60,10 +51,6 @@ class DoctorSpecialty(db.Model):
 
 
 class Patient(db.Model):
-    """
-    01.01 Register Patient
-    CS crosscut: patient profile config (contact, insurance, payment)
-    """
     __tablename__ = "patients"
 
     id                  = db.Column(db.Integer, primary_key=True)
@@ -79,13 +66,17 @@ class Patient(db.Model):
     state               = db.Column(db.String(100))
     zip_code            = db.Column(db.String(20))
     country             = db.Column(db.String(100), default="USA")
-    # CS: insurance config
     insurance_provider  = db.Column(db.String(255))
     insurance_id        = db.Column(db.String(100))
-    # DDD: default payment from profile
     preferred_payment   = db.Column(db.String(50), default="card")
     created_at          = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at          = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    favorites = db.relationship("Favorite", backref="patient", lazy=True,
+                                foreign_keys="Favorite.patient_id")
+    reviews   = db.relationship("Review", backref="patient", lazy=True,
+                                foreign_keys="Review.patient_id")
 
     @property
     def full_name(self):
@@ -96,11 +87,6 @@ class Patient(db.Model):
 
 
 class Doctor(db.Model):
-    """
-    01.02 Register Doctor
-    CS crosscut: doctor profile config (specialty, fees, credentials)
-    DS crosscut: specialty_id FK
-    """
     __tablename__ = "doctors"
 
     id                       = db.Column(db.Integer, primary_key=True)
@@ -118,18 +104,73 @@ class Doctor(db.Model):
     city                     = db.Column(db.String(100))
     state                    = db.Column(db.String(100))
     zip_code                 = db.Column(db.String(20))
-    # DDD: default appointment duration by specialty
     avg_appointment_duration = db.Column(db.Integer, default=30)
     is_verified              = db.Column(db.Boolean, default=False)
     created_at               = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at               = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # Relationships
+    favorites = db.relationship("Favorite", backref="doctor", lazy=True,
+                                foreign_keys="Favorite.doctor_id")
+    reviews   = db.relationship("Review", backref="doctor", lazy=True,
+                                foreign_keys="Review.doctor_id")
+
     @property
     def full_name(self):
         return f"Dr. {self.first_name} {self.last_name}"
 
+    @property
+    def avg_rating(self):
+        if not self.reviews:
+            return None
+        return round(sum(r.rating for r in self.reviews) / len(self.reviews), 1)
+
+    @property
+    def review_count(self):
+        return len(self.reviews)
+
     def __repr__(self):
         return f"<Doctor {self.full_name}>"
+
+
+class Favorite(db.Model):
+    """02.04 Add to Favorites — CA, ADT, CS crosscuts"""
+    __tablename__ = "favorites"
+
+    id         = db.Column(db.Integer, primary_key=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey("patients.id"), nullable=False)
+    doctor_id  = db.Column(db.Integer, db.ForeignKey("doctors.id"),  nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Unique constraint — patient can only favorite a doctor once
+    __table_args__ = (
+        db.UniqueConstraint("patient_id", "doctor_id", name="uq_patient_doctor_favorite"),
+    )
+
+    def __repr__(self):
+        return f"<Favorite patient={self.patient_id} doctor={self.doctor_id}>"
+
+
+class Review(db.Model):
+    """05.01 Submit Review — ER, ADT, ET-In crosscuts"""
+    __tablename__ = "reviews"
+
+    id         = db.Column(db.Integer, primary_key=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey("patients.id"), nullable=False)
+    doctor_id  = db.Column(db.Integer, db.ForeignKey("doctors.id"),  nullable=False)
+    rating     = db.Column(db.Integer, nullable=False)   # 1-5 stars
+    title      = db.Column(db.String(100))
+    body       = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # One review per patient per doctor
+    __table_args__ = (
+        db.UniqueConstraint("patient_id", "doctor_id", name="uq_patient_doctor_review"),
+    )
+
+    def __repr__(self):
+        return f"<Review patient={self.patient_id} doctor={self.doctor_id} rating={self.rating}>"
 
 
 class AuditLog(db.Model):
