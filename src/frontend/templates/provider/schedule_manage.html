@@ -24,8 +24,6 @@
         .card { background: white; border-radius: 16px; box-shadow: 0 1px 8px rgba(0,0,0,0.05); padding: 1.75rem; margin-bottom: 1.5rem; }
         .card-title { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid #F3F4F6; }
         .card-title i { color: var(--primary); }
-
-        /* Add Slot Form */
         .add-form { display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1.5rem; padding: 1.25rem; background: var(--primary-light); border-radius: 12px; }
         .add-form .form-group { flex: 1; min-width: 140px; }
         .form-label { display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.03em; }
@@ -35,10 +33,8 @@
         .btn { padding: 0.625rem 1.25rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; border: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--primary-dark); }
-        .btn-danger { background: #FEE2E2; color: #991B1B; padding: 0.4rem 0.75rem; font-size: 0.75rem; }
+        .btn-danger { background: #FEE2E2; color: #991B1B; padding: 0.4rem 0.75rem; font-size: 0.75rem; border: none; cursor: pointer; border-radius: 6px; }
         .btn-danger:hover { background: #FECACA; }
-
-        /* Schedule Grid */
         .schedule-grid { display: flex; flex-direction: column; gap: 0.75rem; }
         .day-row { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; border-radius: 12px; background: #F9FAFB; border: 1px solid #E5E7EB; }
         .day-label { width: 120px; flex-shrink: 0; font-weight: 600; font-size: 0.9rem; color: #111827; padding-top: 0.25rem; }
@@ -46,16 +42,12 @@
         .day-slots { flex: 1; display: flex; flex-wrap: wrap; gap: 0.5rem; }
         .slot-chip { display: inline-flex; align-items: center; gap: 0.5rem; background: white; border: 1px solid #E5E7EB; border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.8rem; color: #374151; }
         .slot-chip .time { font-weight: 600; color: var(--primary-dark); }
-        .slot-chip form { display: inline; }
         .no-slots { font-size: 0.8rem; color: #9CA3AF; font-style: italic; padding: 0.25rem 0; }
         .day-row.has-slots { background: #F0FDF4; border-color: #86EFAC; }
-
-        /* Stats */
         .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
         .stat-card { background: white; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 6px rgba(0,0,0,0.05); text-align: center; }
         .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
         .stat-label { font-size: 0.75rem; color: #9CA3AF; margin-top: 0.25rem; }
-
         @media (max-width: 640px) {
             .add-form { flex-direction: column; }
             .day-row { flex-direction: column; }
@@ -85,16 +77,26 @@
         <h1 class="page-title">Manage Your Schedule</h1>
         <p class="page-subtitle">Set your weekly recurring availability. Patients will see these time slots when booking appointments.</p>
 
-        <!-- Stats -->
-        {% set total_slots = schedule_by_day.values()|sum(attribute='__len__') if schedule_by_day else 0 %}
-        {% set active_days = schedule_by_day.values()|selectattr('__len__')|list|length if schedule_by_day else 0 %}
+        <!-- Stats — fixed Jinja2 namespace pattern -->
+        {% set total_slots = namespace(count=0) %}
+        {% for day, slots in schedule_by_day.items() %}
+            {% set total_slots.count = total_slots.count + slots|length %}
+        {% endfor %}
+
+        {% set active_days = namespace(count=0) %}
+        {% for day, slots in schedule_by_day.items() %}
+            {% if slots|length > 0 %}
+                {% set active_days.count = active_days.count + 1 %}
+            {% endif %}
+        {% endfor %}
+
         <div class="stats-row">
             <div class="stat-card">
-                <div class="stat-value">{{ total_slots }}</div>
+                <div class="stat-value">{{ total_slots.count }}</div>
                 <div class="stat-label">Total Time Slots</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">{{ active_days }}</div>
+                <div class="stat-value">{{ active_days.count }}</div>
                 <div class="stat-label">Active Days</div>
             </div>
             <div class="stat-card">
