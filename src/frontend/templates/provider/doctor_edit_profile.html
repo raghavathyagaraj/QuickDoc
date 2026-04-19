@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - QuickDoc</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #0D9488; --primary-dark: #0F766E; --primary-light: #CCFBF1; }
+        body { font-family: 'Inter', sans-serif; background: #F9FAFB; min-height: 100vh; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 1rem 5%; background: white; border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; z-index: 100; }
+        .logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+        .logo-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+        .logo-text { font-size: 1.25rem; font-weight: 700; color: #111827; }
+        .back-link { color: var(--primary); text-decoration: none; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; }
+        .main { max-width: 800px; margin: 2rem auto; padding: 0 1.5rem; }
+        .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem; }
+        .page-subtitle { font-size: 0.875rem; color: #6B7280; margin-bottom: 1.5rem; }
+        .flash { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500; margin-bottom: 1rem; }
+        .flash.success { background: #D1FAE5; color: #065F46; }
+        .flash.danger { background: #FEE2E2; color: #991B1B; }
+        .card { background: white; border-radius: 16px; box-shadow: 0 1px 8px rgba(0,0,0,0.05); padding: 2rem; margin-bottom: 1.5rem; }
+        .card-title { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid #F3F4F6; }
+        .card-title i { color: var(--primary); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; font-size: 0.8rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; text-transform: uppercase; letter-spacing: 0.03em; }
+        .form-label .required { color: #EF4444; }
+        .form-control { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid #E5E7EB; border-radius: 10px; font-size: 0.875rem; font-family: 'Inter', sans-serif; color: #111827; outline: none; transition: border-color 0.2s; background: white; }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(13,148,136,0.1); }
+        textarea.form-control { resize: vertical; min-height: 100px; }
+        select.form-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236B7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; }
+        .form-hint { font-size: 0.75rem; color: #9CA3AF; margin-top: 0.25rem; }
+        .completion-bar { margin-bottom: 1.5rem; }
+        .completion-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+        .completion-label { font-size: 0.8rem; font-weight: 500; color: #374151; }
+        .completion-pct { font-size: 0.9rem; font-weight: 700; color: var(--primary); }
+        .progress-bar { width: 100%; height: 8px; background: #F3F4F6; border-radius: 50px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #06B6D4); border-radius: 50px; }
+        .btn-row { display: flex; gap: 1rem; margin-top: 1.5rem; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 10px; font-size: 0.875rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; border: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { background: #F3F4F6; color: #374151; }
+        .btn-secondary:hover { background: #E5E7EB; }
+        @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo"><div class="logo-icon"><i class="fas fa-plus"></i></div><span class="logo-text">QuickDoc</span></a>
+        <a href="{{ url_for('dashboard.doctor_dashboard') }}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+    </nav>
+    <div class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash {{ category }}">
+                    {% if category == 'success' %}<i class="fas fa-check-circle"></i>{% else %}<i class="fas fa-exclamation-circle"></i>{% endif %}
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h1 class="page-title">Edit Your Profile</h1>
+        <p class="page-subtitle">Complete your profile to appear in patient search results.</p>
+
+        <div class="completion-bar">
+            <div class="completion-header">
+                <span class="completion-label">Profile Completion</span>
+                <span class="completion-pct">{{ doctor.profile_completion }}%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width: {{ doctor.profile_completion }}%"></div></div>
+        </div>
+
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="card">
+                <div class="card-title"><i class="fas fa-user-md"></i> Personal Information</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">First Name <span class="required">*</span></label>
+                        <input type="text" name="first_name" class="form-control" value="{{ doctor.first_name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name <span class="required">*</span></label>
+                        <input type="text" name="last_name" class="form-control" value="{{ doctor.last_name }}" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Phone <span class="required">*</span></label>
+                        <input type="tel" name="phone" class="form-control" value="{{ doctor.phone }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">License Number</label>
+                        <input type="text" class="form-control" value="{{ doctor.license_number }}" disabled style="background:#F3F4F6;">
+                        <span class="form-hint">License cannot be changed after registration.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><i class="fas fa-stethoscope"></i> Professional Details</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Specialty</label>
+                        <select name="specialty_id" class="form-control">
+                            {% for spec in specialties %}
+                            <option value="{{ spec.id }}" {% if doctor.specialty_id == spec.id %}selected{% endif %}>{{ spec.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Years of Experience</label>
+                        <input type="number" name="years_experience" class="form-control" value="{{ doctor.years_experience or '' }}" min="0" max="60">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Consultation Fee ($)</label>
+                        <input type="number" name="consultation_fee" class="form-control" value="{{ '%.2f'|format(doctor.consultation_fee) if doctor.consultation_fee else '' }}" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Avg Appointment Duration (mins)</label>
+                        <input type="number" name="avg_appointment_duration" class="form-control" value="{{ doctor.avg_appointment_duration or 30 }}" min="10" max="120">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Professional Bio</label>
+                    <textarea name="bio" class="form-control" placeholder="Tell patients about your experience, specializations, and approach to care..." maxlength="500">{{ doctor.bio or '' }}</textarea>
+                    <span class="form-hint">Max 500 characters.</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><i class="fas fa-hospital"></i> Clinic Information</div>
+                <div class="form-group">
+                    <label class="form-label">Clinic / Hospital Name</label>
+                    <input type="text" name="clinic_name" class="form-control" value="{{ doctor.clinic_name or '' }}" placeholder="e.g. Manhattan Medical Center">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Clinic Address</label>
+                    <input type="text" name="clinic_address" class="form-control" value="{{ doctor.clinic_address or '' }}" placeholder="e.g. 123 Main Street, Suite 400">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">City</label>
+                        <input type="text" name="city" class="form-control" value="{{ doctor.city or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">State</label>
+                        <input type="text" name="state" class="form-control" value="{{ doctor.state or '' }}" placeholder="e.g. NY">
+                    </div>
+                </div>
+                <div class="form-group" style="max-width:50%;">
+                    <label class="form-label">ZIP Code</label>
+                    <input type="text" name="zip_code" class="form-control" value="{{ doctor.zip_code or '' }}">
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+                <a href="{{ url_for('dashboard.doctor_dashboard') }}" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
