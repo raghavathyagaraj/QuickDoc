@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, app
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_jwt_extended import JWTManager
@@ -67,5 +67,8 @@ def create_app():
     app.register_blueprint(social_bp, url_prefix="/social")
     from src.backend.routes.home import home_bp
     app.register_blueprint(home_bp)
+    
+    from src.backend.routes.provider import provider_bp
+    app.register_blueprint(provider_bp, url_prefix="/provider")
     
     return app

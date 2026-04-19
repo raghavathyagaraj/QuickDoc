@@ -72,7 +72,6 @@ class Patient(db.Model):
     created_at          = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at          = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
     favorites = db.relationship("Favorite", backref="patient", lazy=True,
                                 foreign_keys="Favorite.patient_id")
     reviews   = db.relationship("Review", backref="patient", lazy=True,
@@ -109,11 +108,12 @@ class Doctor(db.Model):
     created_at               = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at               = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
-    favorites = db.relationship("Favorite", backref="doctor", lazy=True,
-                                foreign_keys="Favorite.doctor_id")
-    reviews   = db.relationship("Review", backref="doctor", lazy=True,
-                                foreign_keys="Review.doctor_id")
+    favorites  = db.relationship("Favorite", backref="doctor", lazy=True,
+                                 foreign_keys="Favorite.doctor_id")
+    reviews    = db.relationship("Review", backref="doctor", lazy=True,
+                                 foreign_keys="Review.doctor_id")
+    schedules  = db.relationship("Schedule", backref="doctor", lazy=True,
+                                 cascade="all, delete-orphan")
 
     @property
     def full_name(self):
@@ -129,12 +129,42 @@ class Doctor(db.Model):
     def review_count(self):
         return len(self.reviews)
 
+    @property
+    def profile_completion(self):
+        fields = [self.first_name, self.last_name, self.phone,
+                  self.license_number, self.bio, self.clinic_name,
+                  self.clinic_address, self.city, self.consultation_fee]
+        filled = sum(1 for f in fields if f)
+        return int((filled / len(fields)) * 100)
+
     def __repr__(self):
         return f"<Doctor {self.full_name}>"
 
 
+class Schedule(db.Model):
+    """04.02 Update Schedule — weekly recurring time slots."""
+    __tablename__ = "schedules"
+
+    id          = db.Column(db.Integer, primary_key=True)
+    doctor_id   = db.Column(db.Integer, db.ForeignKey("doctors.id"), nullable=False)
+    day_of_week = db.Column(db.String(20), nullable=False)  # Monday, Tuesday, etc.
+    start_time  = db.Column(db.Time, nullable=False)
+    end_time    = db.Column(db.Time, nullable=False)
+    is_active   = db.Column(db.Boolean, default=True)
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at  = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint("doctor_id", "day_of_week", "start_time",
+                            name="uq_doctor_day_time"),
+    )
+
+    def __repr__(self):
+        return f"<Schedule doctor={self.doctor_id} {self.day_of_week} {self.start_time}-{self.end_time}>"
+
+
 class Favorite(db.Model):
-    """02.04 Add to Favorites — CA, ADT, CS crosscuts"""
+    """02.04 Add to Favorites."""
     __tablename__ = "favorites"
 
     id         = db.Column(db.Integer, primary_key=True)
@@ -142,7 +172,6 @@ class Favorite(db.Model):
     doctor_id  = db.Column(db.Integer, db.ForeignKey("doctors.id"),  nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Unique constraint — patient can only favorite a doctor once
     __table_args__ = (
         db.UniqueConstraint("patient_id", "doctor_id", name="uq_patient_doctor_favorite"),
     )
@@ -152,19 +181,18 @@ class Favorite(db.Model):
 
 
 class Review(db.Model):
-    """05.01 Submit Review — ER, ADT, ET-In crosscuts"""
+    """05.01 Submit Review."""
     __tablename__ = "reviews"
 
     id         = db.Column(db.Integer, primary_key=True)
     patient_id = db.Column(db.Integer, db.ForeignKey("patients.id"), nullable=False)
     doctor_id  = db.Column(db.Integer, db.ForeignKey("doctors.id"),  nullable=False)
-    rating     = db.Column(db.Integer, nullable=False)   # 1-5 stars
+    rating     = db.Column(db.Integer, nullable=False)
     title      = db.Column(db.String(100))
     body       = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # One review per patient per doctor
     __table_args__ = (
         db.UniqueConstraint("patient_id", "doctor_id", name="uq_patient_doctor_review"),
     )
