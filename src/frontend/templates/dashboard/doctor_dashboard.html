@@ -125,7 +125,7 @@
             </button>
             <div class="dropdown" id="dropdown">
                 <a href="{{ url_for('profile.doctor_profile') }}"><i class="fas fa-user-md"></i> View Profile</a>
-                <a href="{{ url_for('profile.doctor_edit') }}"><i class="fas fa-edit"></i> Edit Profile</a>
+                <a href="{{ url_for('provider.edit_profile') }}"><i class="fas fa-edit"></i> Edit Profile</a>
                 <a href="{{ url_for('profile.reset_password_request') }}"><i class="fas fa-key"></i> Reset Password</a>
                 <hr>
                 <a href="{{ url_for('auth.logout') }}" class="logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
@@ -214,7 +214,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h2><i class="fas fa-tasks"></i> Profile Completion</h2>
-                        <a href="{{ url_for('profile.doctor_edit') }}" class="btn-link">Complete Profile →</a>
+                        <a href="{{ url_for('provider.edit_profile') }}" class="btn-link">Complete Profile →</a>
                     </div>
                     <div class="card-body">
                         <div class="completion-header">
@@ -349,7 +349,7 @@
                     </div>
                     <div class="card-body">
                         <div class="quick-actions">
-                            <a href="{{ url_for('profile.doctor_edit') }}" class="action-card">
+                            <a href="{{ url_for('provider.edit_profile') }}" class="action-card">
                                 <i class="fas fa-edit"></i>
                                 <h3>Edit Profile</h3>
                                 <span>Update info</span>
@@ -359,15 +359,15 @@
                                 <h3>Reset Password</h3>
                                 <span>Change password</span>
                             </a>
-                            <a href="#" class="action-card">
+                            <a href="{{ url_for('provider.manage_schedule') }}" class="action-card">
                                 <i class="far fa-calendar-alt"></i>
                                 <h3>My Schedule</h3>
-                                <span>Coming soon</span>
+                                <span>Set availability</span>
                             </a>
-                            <a href="#" class="action-card">
-                                <i class="fas fa-users"></i>
-                                <h3>My Patients</h3>
-                                <span>Coming soon</span>
+                            <a href="{{ url_for('provider.edit_profile') }}" class="action-card">
+                                <i class="fas fa-user-edit"></i>
+                                <h3>Edit Profile</h3>
+                                <span>Update your info</span>
                             </a>
                         </div>
                     </div>
