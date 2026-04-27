@@ -87,6 +87,7 @@
         .activity-item:last-child { border-bottom: none; }
         .activity-dot  { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
         .activity-dot.red { background: #EF4444; }
+        .activity-dot.teal { background: #0D9488; }
         .activity-text { font-size: 0.8rem; color: #374151; flex: 1; }
         .activity-time { font-size: 0.7rem; color: #9CA3AF; }
 
@@ -199,10 +200,10 @@
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon purple"><i class="fas fa-shield-alt"></i></div>
+                <div class="stat-icon purple"><i class="fas fa-calendar-check"></i></div>
                 <div class="stat-info">
-                    <h3>{{ patient.preferred_payment.title() }}</h3>
-                    <p>Payment Method</p>
+                    <h3>{{ appointments_count }}</h3>
+                    <p>Upcoming Appointments</p>
                 </div>
             </div>
         </div>
@@ -287,6 +288,41 @@
                     </div>
                 </div>
 
+                <!-- Upcoming Appointments -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-calendar-check" style="color:var(--primary);"></i> Upcoming Appointments</h2>
+                        <a href="{{ url_for('search.search') }}" class="btn-link">Book New →</a>
+                    </div>
+                    <div class="card-body">
+                        {% if upcoming_appointments %}
+                            {% for appt, doctor, specialty, slot in upcoming_appointments %}
+                            <div class="activity-item">
+                                <div class="activity-dot teal"></div>
+                                <span class="activity-text">
+                                    <strong>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</strong>
+                                    {% if specialty %} &bull; {{ specialty.name }}{% endif %}
+                                    <br>
+                                    <span style="font-size:0.75rem; color:#6B7280;">
+                                        <i class="far fa-calendar"></i> {{ appt.appt_datetime.strftime('%A, %B %d, %Y') }}
+                                        &bull; <i class="far fa-clock"></i> {{ slot.start_time.strftime('%I:%M %p') }} - {{ slot.end_time.strftime('%I:%M %p') }}
+                                        &bull; <span style="color:#059669; font-weight:600;">{{ appt.status|capitalize }}</span>
+                                    </span>
+                                </span>
+                                <a href="{{ url_for('search.doctor_public_profile', doctor_id=doctor.id) }}"
+                                   class="fav-view-link">View →</a>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="far fa-calendar-check"></i>
+                                <p>No upcoming appointments.<br>
+                                <a href="{{ url_for('search.search') }}" style="color: var(--primary);">Find a doctor</a> and book your first appointment!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
                 <!-- Recent Activity -->
                 <div class="card">
                     <div class="card-header">
@@ -306,6 +342,8 @@
                                 {% elif log.action == 'SUBMIT_REVIEW' %}Submitted a doctor review
                                 {% elif log.action == 'DOCTOR_SEARCH' %}Searched for doctors
                                 {% elif log.action == 'VIEW_DOCTOR_PUBLIC_PROFILE' %}Viewed a doctor profile
+                                {% elif log.action == 'BOOK_APPOINTMENT' %}Booked an appointment
+                                {% elif log.action == 'VIEW_AVAILABLE_SLOTS' %}Viewed available slots
                                 {% else %}{{ log.action.replace('_', ' ').title() }}{% endif %}
                             </span>
                             <span class="activity-time">{{ log.created_at.strftime('%b %d, %I:%M %p') if log.created_at else '' }}</span>

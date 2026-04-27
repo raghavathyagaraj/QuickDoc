@@ -1,7 +1,8 @@
+from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for
 from flask_login import login_required, current_user
 from src.backend import db
-from src.backend.models.user import Patient, Doctor, DoctorSpecialty, AuditLog, Favorite
+from src.backend.models.user import Patient, Doctor, DoctorSpecialty, AuditLog, Favorite, Appointment, AppointmentSlot
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -53,6 +54,21 @@ def patient_dashboard():
     # Total favorites count (not limited to 5)
     favorites_count = Favorite.query.filter_by(patient_id=patient.id).count()
 
+    # Load upcoming appointments
+    upcoming_appointments = db.session.query(Appointment, Doctor, DoctorSpecialty, AppointmentSlot)\
+        .join(Doctor, Doctor.id == Appointment.doctor_id)\
+        .outerjoin(DoctorSpecialty, DoctorSpecialty.id == Doctor.specialty_id)\
+        .join(AppointmentSlot, AppointmentSlot.id == Appointment.slot_id)\
+        .filter(Appointment.patient_id == patient.id)\
+        .filter(Appointment.appt_datetime >= datetime.utcnow())\
+        .filter(Appointment.status.in_(["confirmed", "pending"]))\
+        .order_by(Appointment.appt_datetime.asc())\
+        .limit(5).all()
+
+    appointments_count = Appointment.query.filter_by(patient_id=patient.id)\
+        .filter(Appointment.appt_datetime >= datetime.utcnow())\
+        .filter(Appointment.status.in_(["confirmed", "pending"])).count()
+
     return render_template(
         "dashboard/patient_dashboard.html",
         patient=patient,
@@ -60,7 +76,9 @@ def patient_dashboard():
         completion=completion,
         activity_logs=activity_logs,
         favorites=favorites,
-        favorites_count=favorites_count
+        favorites_count=favorites_count,
+        upcoming_appointments=upcoming_appointments,
+        appointments_count=appointments_count
     )
 
 
