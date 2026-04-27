@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmed - QuickDoc</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #0D9488; --primary-dark: #0F766E; --primary-light: #CCFBF1; }
+        body { font-family: 'Inter', sans-serif; background: #F9FAFB; min-height: 100vh; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 1rem 5%; background: white; border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; z-index: 100; }
+        .logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+        .logo-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+        .logo-text { font-size: 1.25rem; font-weight: 700; color: #111827; }
+        .main { max-width: 600px; margin: 3rem auto; padding: 0 1.5rem; }
+        .card { background: white; border-radius: 16px; box-shadow: 0 1px 8px rgba(0,0,0,0.05); padding: 2.5rem; text-align: center; }
+        .success-icon { width: 80px; height: 80px; border-radius: 50%; background: #D1FAE5; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
+        .success-icon i { font-size: 2.5rem; color: #059669; }
+        .success-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem; }
+        .success-subtitle { font-size: 0.9rem; color: #6B7280; margin-bottom: 2rem; }
+        .detail-card { background: #F9FAFB; border-radius: 12px; padding: 1.5rem; text-align: left; margin-bottom: 1.5rem; }
+        .detail-row { display: flex; justify-content: space-between; padding: 0.625rem 0; border-bottom: 1px solid #E5E7EB; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { font-size: 0.825rem; color: #6B7280; }
+        .detail-value { font-size: 0.825rem; font-weight: 600; color: #111827; }
+        .appt-id { font-size: 0.75rem; color: #9CA3AF; margin-bottom: 1.5rem; }
+        .btn-row { display: flex; gap: 1rem; justify-content: center; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 10px; font-size: 0.875rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; border: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; text-decoration: none; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { background: #F3F4F6; color: #374151; }
+        .btn-secondary:hover { background: #E5E7EB; }
+        .reminder { background: var(--primary-light); border-radius: 10px; padding: 1rem; margin-top: 1.5rem; font-size: 0.8rem; color: var(--primary-dark); }
+        .reminder i { margin-right: 0.5rem; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo"><div class="logo-icon"><i class="fas fa-plus"></i></div><span class="logo-text">QuickDoc</span></a>
+    </nav>
+
+    <div class="main">
+        <div class="card">
+            <div class="success-icon"><i class="fas fa-check"></i></div>
+            <h1 class="success-title">Appointment Confirmed!</h1>
+            <p class="success-subtitle">Your appointment has been successfully booked. You will receive a confirmation shortly.</p>
+
+            <div class="detail-card">
+                <div class="detail-row">
+                    <span class="detail-label">Doctor</span>
+                    <span class="detail-value">{{ doctor.full_name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Specialty</span>
+                    <span class="detail-value">{{ doctor.specialty.name if doctor.specialty else 'General' }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date</span>
+                    <span class="detail-value">{{ slot.slot_date.strftime('%A, %B %d, %Y') }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Time</span>
+                    <span class="detail-value">{{ slot.start_time.strftime('%I:%M %p') }} — {{ slot.end_time.strftime('%I:%M %p') }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Duration</span>
+                    <span class="detail-value">30 minutes</span>
+                </div>
+                {% if doctor.clinic_name %}
+                <div class="detail-row">
+                    <span class="detail-label">Location</span>
+                    <span class="detail-value">{{ doctor.clinic_name }}{% if doctor.city %}, {{ doctor.city }}{% endif %}</span>
+                </div>
+                {% endif %}
+                {% if doctor.consultation_fee %}
+                <div class="detail-row">
+                    <span class="detail-label">Consultation Fee</span>
+                    <span class="detail-value">${{ '%.2f'|format(doctor.consultation_fee) }}</span>
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value" style="color: #059669;">✓ Confirmed</span>
+                </div>
+                {% if appointment.notes %}
+                <div class="detail-row">
+                    <span class="detail-label">Your Notes</span>
+                    <span class="detail-value">{{ appointment.notes }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <p class="appt-id">Appointment ID: #{{ appointment.id }}</p>
+
+            <div class="btn-row">
+                <a href="{{ url_for('dashboard.patient_dashboard') }}" class="btn btn-primary"><i class="fas fa-home"></i> Go to Dashboard</a>
+                <a href="{{ url_for('search.doctor_profile', doctor_id=doctor.id) }}" class="btn btn-secondary"><i class="fas fa-user-md"></i> View Doctor</a>
+            </div>
+
+            <div class="reminder">
+                <i class="fas fa-bell"></i>
+                Please arrive 10 minutes before your appointment time. If you need to cancel or reschedule, please do so at least 24 hours in advance.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

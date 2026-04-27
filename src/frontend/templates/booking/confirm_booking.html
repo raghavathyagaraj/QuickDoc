@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Booking - QuickDoc</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #0D9488; --primary-dark: #0F766E; --primary-light: #CCFBF1; }
+        body { font-family: 'Inter', sans-serif; background: #F9FAFB; min-height: 100vh; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 1rem 5%; background: white; border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; z-index: 100; }
+        .logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+        .logo-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+        .logo-text { font-size: 1.25rem; font-weight: 700; color: #111827; }
+        .back-link { color: var(--primary); text-decoration: none; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; }
+        .main { max-width: 600px; margin: 2rem auto; padding: 0 1.5rem; }
+        .flash { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500; margin-bottom: 1rem; }
+        .flash.danger { background: #FEE2E2; color: #991B1B; }
+        .flash.warning { background: #FEF3C7; color: #92400E; }
+        .card { background: white; border-radius: 16px; box-shadow: 0 1px 8px rgba(0,0,0,0.05); padding: 2rem; }
+        .card-title { font-size: 1.25rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem; text-align: center; }
+        .confirm-icon { text-align: center; margin-bottom: 1rem; }
+        .confirm-icon i { font-size: 3rem; color: var(--primary); }
+        .detail-row { display: flex; justify-content: space-between; padding: 0.875rem 0; border-bottom: 1px solid #F3F4F6; }
+        .detail-row:last-of-type { border-bottom: none; }
+        .detail-label { font-size: 0.85rem; color: #6B7280; }
+        .detail-value { font-size: 0.85rem; font-weight: 600; color: #111827; }
+        .notes-group { margin-top: 1.25rem; }
+        .notes-label { display: block; font-size: 0.8rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; text-transform: uppercase; letter-spacing: 0.03em; }
+        .notes-input { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid #E5E7EB; border-radius: 10px; font-size: 0.875rem; font-family: 'Inter', sans-serif; color: #111827; outline: none; resize: vertical; min-height: 80px; }
+        .notes-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(13,148,136,0.1); }
+        .notes-hint { font-size: 0.7rem; color: #9CA3AF; margin-top: 0.25rem; }
+        .btn-row { display: flex; gap: 1rem; margin-top: 1.5rem; }
+        .btn { padding: 0.875rem 1.5rem; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; flex: 1; text-decoration: none; text-align: center; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { background: #F3F4F6; color: #374151; }
+        .btn-secondary:hover { background: #E5E7EB; }
+        .fee-highlight { background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 10px; padding: 1rem; text-align: center; margin-top: 1rem; }
+        .fee-highlight .amount { font-size: 1.5rem; font-weight: 700; color: #92400E; }
+        .fee-highlight .label { font-size: 0.75rem; color: #92400E; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo"><div class="logo-icon"><i class="fas fa-plus"></i></div><span class="logo-text">QuickDoc</span></a>
+        <a href="{{ url_for('booking.view_available_slots', doctor_id=doctor.id, date=slot.slot_date.isoformat()) }}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Slots</a>
+    </nav>
+
+    <div class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash {{ category }}">
+                    <i class="fas fa-exclamation-circle"></i> {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <div class="confirm-icon"><i class="fas fa-calendar-check"></i></div>
+            <h2 class="card-title">Confirm Your Appointment</h2>
+
+            <div class="detail-row">
+                <span class="detail-label">Doctor</span>
+                <span class="detail-value">{{ doctor.full_name }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Specialty</span>
+                <span class="detail-value">{{ doctor.specialty.name if doctor.specialty else 'General' }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Date</span>
+                <span class="detail-value">{{ slot.slot_date.strftime('%A, %B %d, %Y') }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Time</span>
+                <span class="detail-value">{{ slot.start_time.strftime('%I:%M %p') }} — {{ slot.end_time.strftime('%I:%M %p') }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Duration</span>
+                <span class="detail-value">30 minutes</span>
+            </div>
+            {% if doctor.clinic_name %}
+            <div class="detail-row">
+                <span class="detail-label">Location</span>
+                <span class="detail-value">{{ doctor.clinic_name }}{% if doctor.city %}, {{ doctor.city }}{% endif %}</span>
+            </div>
+            {% endif %}
+            <div class="detail-row">
+                <span class="detail-label">Patient</span>
+                <span class="detail-value">{{ patient.full_name }}</span>
+            </div>
+
+            {% if doctor.consultation_fee %}
+            <div class="fee-highlight">
+                <div class="label">Consultation Fee</div>
+                <div class="amount">${{ '%.2f'|format(doctor.consultation_fee) }}</div>
+            </div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('booking.submit_booking', doctor_id=doctor.id, slot_id=slot.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="notes-group">
+                    <label class="notes-label">Notes for the Doctor (optional)</label>
+                    <textarea name="notes" class="notes-input" placeholder="Any symptoms, concerns, or reason for visit..." maxlength="500"></textarea>
+                    <span class="notes-hint">Max 500 characters. This will be visible to the doctor.</span>
+                </div>
+
+                <div class="btn-row">
+                    <a href="{{ url_for('booking.view_available_slots', doctor_id=doctor.id, date=slot.slot_date.isoformat()) }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Change Slot</a>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Confirm Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

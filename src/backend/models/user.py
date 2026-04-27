@@ -72,10 +72,12 @@ class Patient(db.Model):
     created_at          = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at          = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    favorites = db.relationship("Favorite", backref="patient", lazy=True,
-                                foreign_keys="Favorite.patient_id")
-    reviews   = db.relationship("Review", backref="patient", lazy=True,
-                                foreign_keys="Review.patient_id")
+    favorites    = db.relationship("Favorite", backref="patient", lazy=True,
+                                   foreign_keys="Favorite.patient_id")
+    reviews      = db.relationship("Review", backref="patient", lazy=True,
+                                   foreign_keys="Review.patient_id")
+    appointments = db.relationship("Appointment", backref="patient", lazy=True,
+                                   foreign_keys="Appointment.patient_id")
 
     @property
     def full_name(self):
@@ -108,12 +110,15 @@ class Doctor(db.Model):
     created_at               = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at               = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    favorites  = db.relationship("Favorite", backref="doctor", lazy=True,
-                                 foreign_keys="Favorite.doctor_id")
-    reviews    = db.relationship("Review", backref="doctor", lazy=True,
-                                 foreign_keys="Review.doctor_id")
-    schedules  = db.relationship("Schedule", backref="doctor", lazy=True,
-                                 cascade="all, delete-orphan")
+    favorites    = db.relationship("Favorite", backref="doctor", lazy=True,
+                                   foreign_keys="Favorite.doctor_id")
+    reviews      = db.relationship("Review", backref="doctor", lazy=True,
+                                   foreign_keys="Review.doctor_id")
+    schedules    = db.relationship("Schedule", backref="doctor", lazy=True,
+                                   cascade="all, delete-orphan")
+    slots        = db.relationship("AppointmentSlot", backref="doctor", lazy=True)
+    appointments = db.relationship("Appointment", backref="doctor", lazy=True,
+                                   foreign_keys="Appointment.doctor_id")
 
     @property
     def full_name(self):
@@ -142,17 +147,18 @@ class Doctor(db.Model):
 
 
 class Schedule(db.Model):
-    """04.02 Update Schedule — weekly recurring time slots."""
     __tablename__ = "schedules"
 
     id          = db.Column(db.Integer, primary_key=True)
     doctor_id   = db.Column(db.Integer, db.ForeignKey("doctors.id"), nullable=False)
-    day_of_week = db.Column(db.String(20), nullable=False)  # Monday, Tuesday, etc.
+    day_of_week = db.Column(db.String(20), nullable=False)
     start_time  = db.Column(db.Time, nullable=False)
     end_time    = db.Column(db.Time, nullable=False)
     is_active   = db.Column(db.Boolean, default=True)
     created_at  = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at  = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    slots = db.relationship("AppointmentSlot", backref="schedule", lazy=True)
 
     __table_args__ = (
         db.UniqueConstraint("doctor_id", "day_of_week", "start_time",
@@ -163,8 +169,51 @@ class Schedule(db.Model):
         return f"<Schedule doctor={self.doctor_id} {self.day_of_week} {self.start_time}-{self.end_time}>"
 
 
+class AppointmentSlot(db.Model):
+    __tablename__ = "appointment_slots"
+
+    id          = db.Column(db.Integer, primary_key=True)
+    doctor_id   = db.Column(db.Integer, db.ForeignKey("doctors.id"), nullable=False)
+    schedule_id = db.Column(db.Integer, db.ForeignKey("schedules.id"), nullable=False)
+    slot_date   = db.Column(db.Date, nullable=False)
+    start_time  = db.Column(db.Time, nullable=False)
+    end_time    = db.Column(db.Time, nullable=False)
+    is_booked   = db.Column(db.Boolean, default=False)
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+
+    appointment = db.relationship("Appointment", backref="slot", uselist=False, lazy=True)
+
+    __table_args__ = (
+        db.UniqueConstraint("doctor_id", "slot_date", "start_time",
+                            name="uq_doctor_date_time"),
+    )
+
+    def __repr__(self):
+        return f"<Slot doctor={self.doctor_id} {self.slot_date} {self.start_time}-{self.end_time}>"
+
+
+class Appointment(db.Model):
+    __tablename__ = "appointments"
+
+    id             = db.Column(db.Integer, primary_key=True)
+    patient_id     = db.Column(db.Integer, db.ForeignKey("patients.id"), nullable=False)
+    doctor_id      = db.Column(db.Integer, db.ForeignKey("doctors.id"), nullable=False)
+    slot_id        = db.Column(db.Integer, db.ForeignKey("appointment_slots.id"), nullable=False)
+    appt_datetime  = db.Column(db.DateTime, nullable=False)
+    status         = db.Column(db.String(20), nullable=False, default="confirmed")
+    notes          = db.Column(db.Text)
+    created_at     = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at     = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint("patient_id", "slot_id", name="uq_patient_slot"),
+    )
+
+    def __repr__(self):
+        return f"<Appointment patient={self.patient_id} doctor={self.doctor_id} {self.appt_datetime}>"
+
+
 class Favorite(db.Model):
-    """02.04 Add to Favorites."""
     __tablename__ = "favorites"
 
     id         = db.Column(db.Integer, primary_key=True)
@@ -181,7 +230,6 @@ class Favorite(db.Model):
 
 
 class Review(db.Model):
-    """05.01 Submit Review."""
     __tablename__ = "reviews"
 
     id         = db.Column(db.Integer, primary_key=True)
@@ -202,7 +250,6 @@ class Review(db.Model):
 
 
 class AuditLog(db.Model):
-    """ADT crosscut — tracks all user actions."""
     __tablename__ = "audit_log"
 
     id          = db.Column(db.Integer, primary_key=True)
