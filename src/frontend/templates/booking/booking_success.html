@@ -96,7 +96,7 @@
 
             <div class="btn-row">
                 <a href="{{ url_for('dashboard.patient_dashboard') }}" class="btn btn-primary"><i class="fas fa-home"></i> Go to Dashboard</a>
-                <a href="{{ url_for('search.doctor_profile', doctor_id=doctor.id) }}" class="btn btn-secondary"><i class="fas fa-user-md"></i> View Doctor</a>
+                <a href="{{ url_for('search.doctor_public_profile', doctor_id=doctor.id) }}" class="btn btn-secondary"><i class="fas fa-user-md"></i> View Doctor</a>
             </div>
 
             <div class="reminder">

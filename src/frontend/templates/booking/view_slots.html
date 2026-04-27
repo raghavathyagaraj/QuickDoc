@@ -61,7 +61,7 @@
 <body>
     <nav class="navbar">
         <a href="/" class="logo"><div class="logo-icon"><i class="fas fa-plus"></i></div><span class="logo-text">QuickDoc</span></a>
-        <a href="{{ url_for('search.doctor_profile', doctor_id=doctor.id) }}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Profile</a>
+        <a href="{{ url_for('search.doctor_public_profile', doctor_id=doctor.id) }}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Profile</a>
     </nav>
 
     <div class="main">

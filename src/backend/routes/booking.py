@@ -97,7 +97,7 @@ def view_available_slots(doctor_id):
     schedules = Schedule.query.filter_by(doctor_id=doctor_id, is_active=True).all()
     if not schedules:
         flash("This doctor has not set their availability yet.", "warning")
-        return redirect(url_for("search.doctor_profile", doctor_id=doctor_id))
+        return redirect(url_for("search.doctor_public_profile", doctor_id=doctor_id))
 
     # Generate slots if needed
     try:
