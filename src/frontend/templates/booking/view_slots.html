@@ -20,38 +20,28 @@
         .flash.success { background: #D1FAE5; color: #065F46; }
         .flash.danger { background: #FEE2E2; color: #991B1B; }
         .flash.warning { background: #FEF3C7; color: #92400E; }
-
-        /* Doctor Header */
         .doctor-header { display: flex; gap: 1.5rem; align-items: center; background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 1px 8px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
         .doctor-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--primary); flex-shrink: 0; }
         .doctor-info h1 { font-size: 1.25rem; font-weight: 700; color: #111827; }
         .doctor-meta { font-size: 0.85rem; color: #6B7280; margin-top: 0.25rem; }
-        .doctor-meta span { margin-right: 1rem; }
-        .badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; margin-right: 0.5rem; }
         .badge-specialty { background: var(--primary-light); color: var(--primary-dark); }
         .badge-fee { background: #FEF3C7; color: #92400E; }
-
-        /* Layout */
         .booking-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
         .card { background: white; border-radius: 16px; box-shadow: 0 1px 8px rgba(0,0,0,0.05); padding: 1.5rem; }
         .card-title { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
         .card-title i { color: var(--primary); }
-
-        /* Date Picker */
         .date-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.4rem; }
         .date-header { font-size: 0.7rem; font-weight: 600; color: #9CA3AF; text-align: center; padding: 0.4rem; }
-        .date-cell { text-align: center; padding: 0.5rem; border-radius: 8px; font-size: 0.8rem; color: #9CA3AF; cursor: default; }
+        .date-cell { text-align: center; padding: 0.5rem; border-radius: 8px; font-size: 0.8rem; color: #D1D5DB; cursor: default; }
         .date-cell.available { background: #F0FDF4; color: #065F46; cursor: pointer; font-weight: 600; border: 1px solid #86EFAC; }
         .date-cell.available:hover { background: #DCFCE7; border-color: var(--primary); }
-        .date-cell.selected { background: var(--primary); color: white; border-color: var(--primary); }
+        .date-cell.selected { background: var(--primary) !important; color: white !important; border-color: var(--primary) !important; }
         .date-cell.today { border: 2px solid var(--primary); }
-        .date-cell.past { color: #D1D5DB; }
         .month-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
         .month-nav h3 { font-size: 0.95rem; font-weight: 600; color: #111827; }
         .month-btn { background: none; border: 1px solid #E5E7EB; border-radius: 8px; padding: 0.4rem 0.75rem; cursor: pointer; color: #374151; font-size: 0.8rem; }
         .month-btn:hover { border-color: var(--primary); color: var(--primary); }
-
-        /* Time Slots */
         .slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
         .slot-btn { display: block; text-align: center; padding: 0.75rem; border-radius: 10px; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; border: 1.5px solid #E5E7EB; color: #374151; background: white; }
         .slot-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
@@ -61,15 +51,11 @@
         .no-slots i { font-size: 2rem; display: block; margin-bottom: 0.75rem; }
         .selected-date-label { font-size: 0.9rem; color: #374151; margin-bottom: 1rem; font-weight: 500; }
         .selected-date-label strong { color: var(--primary-dark); }
-
-        /* Existing appointments warning */
         .existing-appts { background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; font-size: 0.8rem; color: #92400E; }
         .existing-appts h4 { font-size: 0.85rem; margin-bottom: 0.5rem; }
-
-        @media (max-width: 768px) {
-            .booking-layout { grid-template-columns: 1fr; }
-            .slots-grid { grid-template-columns: repeat(2, 1fr); }
-        }
+        .legend { margin-top: 1rem; font-size: 0.75rem; color: #9CA3AF; }
+        .legend span { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 0.25rem; }
+        @media (max-width: 768px) { .booking-layout { grid-template-columns: 1fr; } .slots-grid { grid-template-columns: repeat(2, 1fr); } }
     </style>
 </head>
 <body>
@@ -121,17 +107,12 @@
             <!-- Left: Calendar -->
             <div class="card">
                 <div class="card-title"><i class="fas fa-calendar-alt"></i> Select a Date</div>
-
-                {% set today = selected_date %}
-                {% set month_start = today.replace(day=1) %}
-
                 <div class="month-nav">
-                    <button class="month-btn" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i> Prev</button>
-                    <h3>{{ selected_date.strftime('%B %Y') }}</h3>
-                    <button class="month-btn" onclick="changeMonth(1)">Next <i class="fas fa-chevron-right"></i></button>
+                    <button class="month-btn" id="prevMonth"><i class="fas fa-chevron-left"></i> Prev</button>
+                    <h3 id="monthLabel"></h3>
+                    <button class="month-btn" id="nextMonth">Next <i class="fas fa-chevron-right"></i></button>
                 </div>
-
-                <div class="date-grid">
+                <div class="date-grid" id="calendarGrid">
                     <div class="date-header">Sun</div>
                     <div class="date-header">Mon</div>
                     <div class="date-header">Tue</div>
@@ -139,31 +120,10 @@
                     <div class="date-header">Thu</div>
                     <div class="date-header">Fri</div>
                     <div class="date-header">Sat</div>
-
-                    {% set avail_set = available_dates %}
-                    {% set ns = namespace(current_date=month_start) %}
-
-                    {# Empty cells before first day #}
-                    {% for i in range(month_start.weekday() + 1 if month_start.weekday() != 6 else 0) %}
-                        {% if month_start.weekday() != 6 %}
-                        <div class="date-cell"></div>
-                        {% endif %}
-                    {% endfor %}
-                    {% if month_start.weekday() == 6 %}
-                    {# Sunday is 0 in our grid but 6 in Python #}
-                    {% endif %}
-
-                    {% for day_offset in range(31) %}
-                        {% set check_date = month_start.replace(day=1) %}
-                        {% set d = day_offset + 1 %}
-                        {% if d <= (month_start.replace(month=month_start.month % 12 + 1, day=1) - timedelta(days=1)).day if month_start.month < 12 else (month_start.replace(year=month_start.year+1, month=1, day=1) - timedelta(days=1)).day %}
-                        {% endif %}
-                    {% endfor %}
                 </div>
-
-                <div style="margin-top: 1rem; font-size: 0.75rem; color: #9CA3AF;">
-                    <span style="display:inline-block; width:12px; height:12px; background:#F0FDF4; border:1px solid #86EFAC; border-radius:3px; vertical-align:middle;"></span> Available
-                    <span style="margin-left:1rem; display:inline-block; width:12px; height:12px; background:var(--primary); border-radius:3px; vertical-align:middle;"></span> Selected
+                <div class="legend">
+                    <span style="background:#F0FDF4; border:1px solid #86EFAC;"></span> Available
+                    <span style="margin-left:1rem; background:var(--primary);"></span> Selected
                 </div>
             </div>
 
@@ -195,71 +155,65 @@
     </div>
 
     <script>
-        // Available dates from server
-        const availableDates = [
-            {% for d in available_dates %}'{{ d.isoformat() }}',{% endfor %}
-        ];
+        const availableDates = [{% for d in available_dates %}'{{ d.isoformat() }}',{% endfor %}];
         const doctorId = {{ doctor.id }};
         const selectedDate = '{{ selected_date.isoformat() }}';
 
-        function changeMonth(direction) {
-            const current = new Date(selectedDate);
-            current.setMonth(current.getMonth() + direction);
-            current.setDate(1);
-            // Find nearest available date in that month
-            const monthStr = current.toISOString().slice(0, 7);
-            const datesInMonth = availableDates.filter(d => d.startsWith(monthStr));
-            if (datesInMonth.length > 0) {
-                window.location.href = `/booking/book/${doctorId}?date=${datesInMonth[0]}`;
-            } else {
-                // Go to first day of month anyway
-                window.location.href = `/booking/book/${doctorId}?date=${current.toISOString().slice(0, 10)}`;
-            }
+        let currentYear, currentMonth;
+
+        function initCalendar() {
+            const sel = new Date(selectedDate);
+            currentYear = sel.getFullYear();
+            currentMonth = sel.getMonth();
+            renderCalendar();
         }
 
-        // Make date cells clickable via JS since Jinja calendar is complex
-        document.addEventListener('DOMContentLoaded', function() {
-            // Build calendar dynamically
-            const grid = document.querySelector('.date-grid');
-            const selected = new Date(selectedDate);
-            const year = selected.getFullYear();
-            const month = selected.getMonth();
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const startWeekday = firstDay.getDay(); // 0=Sun
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const label = document.getElementById('monthLabel');
+            const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-            // Clear existing day cells (keep headers)
-            const headers = Array.from(grid.querySelectorAll('.date-header'));
+            label.textContent = months[currentMonth] + ' ' + currentYear;
+
+            // Remove old day cells but keep headers
+            const headers = grid.querySelectorAll('.date-header');
             grid.innerHTML = '';
             headers.forEach(h => grid.appendChild(h));
 
-            // Empty cells
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const startWeekday = firstDay.getDay();
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Empty cells before first day
             for (let i = 0; i < startWeekday; i++) {
                 const empty = document.createElement('div');
                 empty.className = 'date-cell';
                 grid.appendChild(empty);
             }
 
-            const today = new Date();
-            today.setHours(0,0,0,0);
-
+            // Day cells
             for (let d = 1; d <= lastDay.getDate(); d++) {
                 const cell = document.createElement('div');
                 cell.className = 'date-cell';
                 cell.textContent = d;
 
-                const cellDate = new Date(year, month, d);
-                const dateStr = cellDate.toISOString().slice(0, 10);
+                const cellDate = new Date(currentYear, currentMonth, d);
+                const dateStr = cellDate.getFullYear() + '-' +
+                    String(cellDate.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(cellDate.getDate()).padStart(2, '0');
 
                 if (cellDate < today) {
-                    cell.classList.add('past');
+                    // past date — grey
                 } else if (availableDates.includes(dateStr)) {
                     cell.classList.add('available');
                     if (dateStr === selectedDate) {
                         cell.classList.add('selected');
                     }
-                    cell.onclick = function() {
-                        window.location.href = `/booking/book/${doctorId}?date=${dateStr}`;
+                    cell.onclick = function () {
+                        window.location.href = '/booking/book/' + doctorId + '?date=' + dateStr;
                     };
                 }
 
@@ -269,7 +223,21 @@
 
                 grid.appendChild(cell);
             }
-        });
+        }
+
+        document.getElementById('prevMonth').onclick = function () {
+            currentMonth--;
+            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            renderCalendar();
+        };
+
+        document.getElementById('nextMonth').onclick = function () {
+            currentMonth++;
+            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            renderCalendar();
+        };
+
+        initCalendar();
     </script>
 </body>
 </html>
