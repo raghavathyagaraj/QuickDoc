@@ -75,7 +75,7 @@ pipeline {
             steps {
                 sh '''
                     . venv/bin/activate
-                    pip install flake8 bandit pbr --quiet
+                    pip install flake8 bandit --quiet
                     flake8 src/ --max-line-length=120 --exclude=venv --statistics || true
                     bandit -r src/ -ll || true
                     echo "✅ Code quality checks completed"
@@ -168,32 +168,14 @@ print('✅ Database integration config verified')
             withCredentials([string(credentialsId: "${env.SLACK_URL_ID}", variable: 'SLACK_WEBHOOK')]) {
                 script {
                     if (env.ENV_NAME == 'QA') {
-                        // Read QA release notes
-                        def releaseNotes = ""
-                        if (fileExists('release-notes/qa.md')) {
-                            releaseNotes = readFile('release-notes/qa.md')
-                            releaseNotes = releaseNotes.take(600)
-                            releaseNotes = releaseNotes.replaceAll('"', '\\\\"').replaceAll('\n', '\\\\n').replaceAll('\r', '')
-                        } else {
-                            releaseNotes = "No release notes available"
-                        }
-                        
-                        def payload = """{
-    "text": "✅ *QuickDoc QA Deployment Success!*\\n*Build:* #${BUILD_NUMBER}\\n*Branch:* ${GIT_BRANCH}\\n*URL:* http://${TARGET_IP}\\n\\n*Release Notes:*\\n${releaseNotes}"
-}"""
-                        writeFile file: 'slack_payload.json', text: payload
-                        
-                        // Use double quotes to expand SLACK_WEBHOOK variable
-                        sh "curl -X POST -H 'Content-type: application/json' --data @slack_payload.json ${SLACK_WEBHOOK}"
-                        
+                        def notes = readFile('release-notes/qa.md').trim()
+                        def header = "*QA Release Notes - Build #${BUILD_NUMBER}*\n*Branch:* ${GIT_BRANCH} | *URL:* http://${TARGET_IP}\n\n"
+                        def fullMessage = (header + notes).replaceAll('"', '\\\\"').replaceAll('\n', '\\\\n')
+                        sh """curl -X POST -H 'Content-type: application/json' \
+                        --data '{"text":"${fullMessage}"}' \$SLACK_WEBHOOK"""
                     } else {
-                        // DEV deployment
-                        def payload = """{
-    "text": "✅ *QuickDoc DEV Deployment Success!*\\n*Build:* #${BUILD_NUMBER}\\n*Branch:* ${GIT_BRANCH}\\n*URL:* http://${TARGET_IP}"
-}"""
-                        writeFile file: 'slack_payload.json', text: payload
-                        
-                        sh "curl -X POST -H 'Content-type: application/json' --data @slack_payload.json ${SLACK_WEBHOOK}"
+                        sh """curl -X POST -H 'Content-type: application/json' \
+                        --data '{"text":"✅ *QuickDoc DEV Deployment Success!*\\n*Build:* #${BUILD_NUMBER}\\n*Branch:* ${GIT_BRANCH}\\n*URL:* http://${TARGET_IP}"}' \$SLACK_WEBHOOK"""
                     }
                 }
             }
@@ -202,14 +184,8 @@ print('✅ Database integration config verified')
         failure {
             echo "❌ Pipeline failed!"
             withCredentials([string(credentialsId: "${env.SLACK_URL_ID}", variable: 'SLACK_WEBHOOK')]) {
-                script {
-                    def payload = """{
-    "text": "❌ *QuickDoc Build Failed!*\\n*Project:* ${JOB_NAME}\\n*Build:* #${BUILD_NUMBER}\\n*Env:* ${ENV_NAME}\\n\\nPlease check Jenkins logs immediately."
-}"""
-                    writeFile file: 'slack_payload.json', text: payload
-                    
-                    sh "curl -X POST -H 'Content-type: application/json' --data @slack_payload.json ${SLACK_WEBHOOK}"
-                }
+                sh """curl -X POST -H 'Content-type: application/json' \
+                --data '{"text":"❌ *QuickDoc Build Failed!*\\n*Project:* ${JOB_NAME}\\n*Build:* #${BUILD_NUMBER}\\n*Env:* ${ENV_NAME}\\n\\nPlease check Jenkins logs immediately."}' \$SLACK_WEBHOOK"""
             }
         }
     }
