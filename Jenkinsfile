@@ -166,22 +166,15 @@ print('✅ Database integration config verified')
         success {
             echo "✅ Deployment Successful!"
             withCredentials([string(credentialsId: "${env.SLACK_URL_ID}", variable: 'SLACK_WEBHOOK')]) {
-                script {
+                script 
                     if (env.ENV_NAME == 'QA') {
-                        def notes = readFile('release-notes/qa.md').trim()
-                        def message = "QA Release Notes - Build ${BUILD_NUMBER} - Branch ${GIT_BRANCH} - URL http://${TARGET_IP}\n\n${notes}"
-
-                        def payload = groovy.json.JsonOutput.toJson([text: message])
-                        writeFile file: 'slack_payload.json', text: payload
-
-                        sh '''
-                            curl -X POST -H "Content-type: application/json" \
-                            -d @slack_payload.json $SLACK_WEBHOOK
-                        '''
-                    } else {
+                        sh """curl -X POST -H 'Content-type: application/json' \
+                        --data '{"text":"✅ *QuickDoc QA Deployment Success!*\\n*Build:* #${BUILD_NUMBER}\\n*Branch:* ${GIT_BRANCH}\\n*URL:* http://${TARGET_IP}"}' \$SLACK_WEBHOOK"""
+                    }
+                    else {
                         def message = "✅ QuickDoc DEV Deployment Success!\nBuild: #${BUILD_NUMBER}\nBranch: ${GIT_BRANCH}\nURL: http://${TARGET_IP}"
-                        def payload = groovy.json.JsonOutput.toJson([text: message])
-                        writeFile file: 'slack_payload.json', text: payload
+                        
+                        
 
                         sh '''
                             curl -X POST -H "Content-type: application/json" \
@@ -197,8 +190,8 @@ print('✅ Database integration config verified')
             withCredentials([string(credentialsId: "${env.SLACK_URL_ID}", variable: 'SLACK_WEBHOOK')]) {
                 script {
                     def message = "❌ QuickDoc Build Failed!\nProject: ${JOB_NAME}\nBuild: #${BUILD_NUMBER}\nEnv: ${ENV_NAME}\n\nCheck Jenkins logs immediately."
-                    def payload = groovy.json.JsonOutput.toJson([text: message])
-                    writeFile file: 'slack_payload.json', text: payload
+                    
+                    
 
                     sh '''
                         curl -X POST -H "Content-type: application/json" \
