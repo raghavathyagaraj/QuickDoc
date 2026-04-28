@@ -166,20 +166,13 @@ print('✅ Database integration config verified')
         success {
             echo "✅ Deployment Successful!"
             withCredentials([string(credentialsId: "${env.SLACK_URL_ID}", variable: 'SLACK_WEBHOOK')]) {
-                script 
+                script {
                     if (env.ENV_NAME == 'QA') {
                         sh """curl -X POST -H 'Content-type: application/json' \
                         --data '{"text":"✅ *QuickDoc QA Deployment Success!*\\n*Build:* #${BUILD_NUMBER}\\n*Branch:* ${GIT_BRANCH}\\n*URL:* http://${TARGET_IP}"}' \$SLACK_WEBHOOK"""
-                    }
-                    else {
-                        def message = "✅ QuickDoc DEV Deployment Success!\nBuild: #${BUILD_NUMBER}\nBranch: ${GIT_BRANCH}\nURL: http://${TARGET_IP}"
-                        
-                        
-
-                        sh '''
-                            curl -X POST -H "Content-type: application/json" \
-                            -d @slack_payload.json $SLACK_WEBHOOK
-                        '''
+                    } else {
+                        sh """curl -X POST -H 'Content-type: application/json' \
+                        --data '{"text":"✅ *QuickDoc DEV Deployment Success!*\\n*Build:* #${BUILD_NUMBER}\\n*Branch:* ${GIT_BRANCH}\\n*URL:* http://${TARGET_IP}"}' \$SLACK_WEBHOOK"""
                     }
                 }
             }
@@ -188,16 +181,8 @@ print('✅ Database integration config verified')
         failure {
             echo "❌ Pipeline failed!"
             withCredentials([string(credentialsId: "${env.SLACK_URL_ID}", variable: 'SLACK_WEBHOOK')]) {
-                script {
-                    def message = "❌ QuickDoc Build Failed!\nProject: ${JOB_NAME}\nBuild: #${BUILD_NUMBER}\nEnv: ${ENV_NAME}\n\nCheck Jenkins logs immediately."
-                    
-                    
-
-                    sh '''
-                        curl -X POST -H "Content-type: application/json" \
-                        -d @slack_payload.json $SLACK_WEBHOOK
-                    '''
-                }
+                sh """curl -X POST -H 'Content-type: application/json' \
+                --data '{"text":"❌ *QuickDoc Build Failed!*\\n*Project:* ${JOB_NAME}\\n*Build:* #${BUILD_NUMBER}\\n*Env:* ${ENV_NAME}\\n\\nPlease check Jenkins logs immediately."}' \$SLACK_WEBHOOK"""
             }
         }
     }
