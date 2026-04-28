@@ -167,16 +167,15 @@ print('✅ Database integration config verified')
             echo "✅ Deployment Successful!"
             withCredentials([string(credentialsId: "${env.SLACK_URL_ID}", variable: 'SLACK_WEBHOOK')]) {
                 script {
+                    def slackText
                     if (env.ENV_NAME == 'QA') {
                         def notes = readFile('release-notes/qa.md').trim()
-                        def header = "*QA Release Notes - Build #${BUILD_NUMBER}*\n*Branch:* ${GIT_BRANCH} | *URL:* http://${TARGET_IP}\n\n"
-                        def fullMessage = (header + notes).replaceAll('"', '\\\\"').replaceAll('\n', '\\\\n')
-                        sh """curl -X POST -H 'Content-type: application/json' \
-                        --data '{"text":"${fullMessage}"}' \$SLACK_WEBHOOK"""
+                        slackText = "*QA Release Notes - Build #${BUILD_NUMBER}*\n*Branch:* ${GIT_BRANCH} | *URL:* http://${TARGET_IP}\n\n" + notes
                     } else {
-                        sh """curl -X POST -H 'Content-type: application/json' \
-                        --data '{"text":"✅ *QuickDoc DEV Deployment Success!*\\n*Build:* #${BUILD_NUMBER}\\n*Branch:* ${GIT_BRANCH}\\n*URL:* http://${TARGET_IP}"}' \$SLACK_WEBHOOK"""
+                        slackText = "✅ *QuickDoc DEV Deployment Success!*\n*Build:* #${BUILD_NUMBER}\n*Branch:* ${GIT_BRANCH}\n*URL:* http://${TARGET_IP}"
                     }
+                    writeFile file: 'slack_payload.json', text: groovy.json.JsonOutput.toJson([text: slackText])
+                    sh 'curl -X POST -H "Content-type: application/json" --data @slack_payload.json "$SLACK_WEBHOOK"'
                 }
             }
         }
