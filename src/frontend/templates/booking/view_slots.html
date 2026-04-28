@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment - {{ doctor.full_name }} - QuickDoc</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #0D9488; --primary-dark: #0F766E; --primary-light: #CCFBF1; }
+        body { font-family: 'Inter', sans-serif; background: #F9FAFB; min-height: 100vh; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 1rem 5%; background: white; border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; z-index: 100; }
+        .logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+        .logo-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+        .logo-text { font-size: 1.25rem; font-weight: 700; color: #111827; }
+        .back-link { color: var(--primary); text-decoration: none; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; }
+        .main { max-width: 1000px; margin: 2rem auto; padding: 0 1.5rem; }
+        .flash { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500; margin-bottom: 1rem; }
+        .flash.success { background: #D1FAE5; color: #065F46; }
+        .flash.danger { background: #FEE2E2; color: #991B1B; }
+        .flash.warning { background: #FEF3C7; color: #92400E; }
+        .doctor-header { display: flex; gap: 1.5rem; align-items: center; background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 1px 8px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
+        .doctor-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--primary); flex-shrink: 0; }
+        .doctor-info h1 { font-size: 1.25rem; font-weight: 700; color: #111827; }
+        .doctor-meta { font-size: 0.85rem; color: #6B7280; margin-top: 0.25rem; }
+        .badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; margin-right: 0.5rem; }
+        .badge-specialty { background: var(--primary-light); color: var(--primary-dark); }
+        .badge-fee { background: #FEF3C7; color: #92400E; }
+        .booking-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .card { background: white; border-radius: 16px; box-shadow: 0 1px 8px rgba(0,0,0,0.05); padding: 1.5rem; }
+        .card-title { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card-title i { color: var(--primary); }
+        .date-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.4rem; }
+        .date-header { font-size: 0.7rem; font-weight: 600; color: #9CA3AF; text-align: center; padding: 0.4rem; }
+        .date-cell { text-align: center; padding: 0.5rem; border-radius: 8px; font-size: 0.8rem; color: #D1D5DB; cursor: default; }
+        .date-cell.available { background: #F0FDF4; color: #065F46; cursor: pointer; font-weight: 600; border: 1px solid #86EFAC; }
+        .date-cell.available:hover { background: #DCFCE7; border-color: var(--primary); }
+        .date-cell.selected { background: var(--primary) !important; color: white !important; border-color: var(--primary) !important; }
+        .date-cell.today { border: 2px solid var(--primary); }
+        .month-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .month-nav h3 { font-size: 0.95rem; font-weight: 600; color: #111827; }
+        .month-btn { background: none; border: 1px solid #E5E7EB; border-radius: 8px; padding: 0.4rem 0.75rem; cursor: pointer; color: #374151; font-size: 0.8rem; }
+        .month-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+        .slot-btn { display: block; text-align: center; padding: 0.75rem; border-radius: 10px; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; border: 1.5px solid #E5E7EB; color: #374151; background: white; }
+        .slot-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+        .slot-btn .time { display: block; font-size: 0.9rem; }
+        .slot-btn .duration { display: block; font-size: 0.65rem; color: #9CA3AF; margin-top: 0.15rem; }
+        .no-slots { text-align: center; padding: 2rem; color: #9CA3AF; font-size: 0.9rem; }
+        .no-slots i { font-size: 2rem; display: block; margin-bottom: 0.75rem; }
+        .selected-date-label { font-size: 0.9rem; color: #374151; margin-bottom: 1rem; font-weight: 500; }
+        .selected-date-label strong { color: var(--primary-dark); }
+        .existing-appts { background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; font-size: 0.8rem; color: #92400E; }
+        .existing-appts h4 { font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .legend { margin-top: 1rem; font-size: 0.75rem; color: #9CA3AF; }
+        .legend span { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 0.25rem; }
+        @media (max-width: 768px) { .booking-layout { grid-template-columns: 1fr; } .slots-grid { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo"><div class="logo-icon"><i class="fas fa-plus"></i></div><span class="logo-text">QuickDoc</span></a>
+        <a href="{{ url_for('search.doctor_public_profile', doctor_id=doctor.id) }}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Profile</a>
+    </nav>
+
+    <div class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash {{ category }}">
+                    {% if category == 'success' %}<i class="fas fa-check-circle"></i>
+                    {% elif category == 'warning' %}<i class="fas fa-exclamation-triangle"></i>
+                    {% else %}<i class="fas fa-exclamation-circle"></i>{% endif %}
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Doctor Header -->
+        <div class="doctor-header">
+            <div class="doctor-avatar"><i class="fas fa-user-md"></i></div>
+            <div class="doctor-info">
+                <h1>Book Appointment with {{ doctor.full_name }}</h1>
+                <div class="doctor-meta">
+                    <span class="badge badge-specialty"><i class="fas fa-stethoscope"></i> {{ doctor.specialty.name if doctor.specialty else 'General' }}</span>
+                    {% if doctor.consultation_fee %}
+                    <span class="badge badge-fee"><i class="fas fa-dollar-sign"></i> ${{ '%.2f'|format(doctor.consultation_fee) }}</span>
+                    {% endif %}
+                    {% if doctor.city %}<span><i class="fas fa-map-marker-alt"></i> {{ doctor.city }}, {{ doctor.state }}</span>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Existing Appointments Warning -->
+        {% if existing_appts %}
+        <div class="existing-appts">
+            <h4><i class="fas fa-info-circle"></i> You have existing appointments with this doctor:</h4>
+            {% for appt in existing_appts %}
+            <div>{{ appt.appt_datetime.strftime('%B %d, %Y at %I:%M %p') }} — {{ appt.status|capitalize }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="booking-layout">
+            <!-- Left: Calendar -->
+            <div class="card">
+                <div class="card-title"><i class="fas fa-calendar-alt"></i> Select a Date</div>
+                <div class="month-nav">
+                    <button class="month-btn" id="prevMonth"><i class="fas fa-chevron-left"></i> Prev</button>
+                    <h3 id="monthLabel"></h3>
+                    <button class="month-btn" id="nextMonth">Next <i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="date-grid" id="calendarGrid">
+                    <div class="date-header">Sun</div>
+                    <div class="date-header">Mon</div>
+                    <div class="date-header">Tue</div>
+                    <div class="date-header">Wed</div>
+                    <div class="date-header">Thu</div>
+                    <div class="date-header">Fri</div>
+                    <div class="date-header">Sat</div>
+                </div>
+                <div class="legend">
+                    <span style="background:#F0FDF4; border:1px solid #86EFAC;"></span> Available
+                    <span style="margin-left:1rem; background:var(--primary);"></span> Selected
+                </div>
+            </div>
+
+            <!-- Right: Time Slots -->
+            <div class="card">
+                <div class="card-title"><i class="fas fa-clock"></i> Available Time Slots</div>
+                <div class="selected-date-label">
+                    Showing slots for: <strong>{{ selected_date.strftime('%A, %B %d, %Y') }}</strong>
+                </div>
+
+                {% if available_slots %}
+                <div class="slots-grid">
+                    {% for slot in available_slots %}
+                    <a href="{{ url_for('booking.confirm_booking', doctor_id=doctor.id, slot_id=slot.id) }}" class="slot-btn">
+                        <span class="time">{{ slot.start_time.strftime('%I:%M %p') }}</span>
+                        <span class="duration">30 min</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="no-slots">
+                    <i class="far fa-calendar-times"></i>
+                    No available slots for this date.<br>
+                    Please select a different date from the calendar.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const availableDates = [{% for d in available_dates %}'{{ d.isoformat() }}',{% endfor %}];
+        const doctorId = {{ doctor.id }};
+        const selectedDate = '{{ selected_date.isoformat() }}';
+
+        let currentYear, currentMonth;
+
+        function initCalendar() {
+            const sel = new Date(selectedDate);
+            currentYear = sel.getFullYear();
+            currentMonth = sel.getMonth();
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const label = document.getElementById('monthLabel');
+            const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+            label.textContent = months[currentMonth] + ' ' + currentYear;
+
+            // Remove old day cells but keep headers
+            const headers = grid.querySelectorAll('.date-header');
+            grid.innerHTML = '';
+            headers.forEach(h => grid.appendChild(h));
+
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const startWeekday = firstDay.getDay();
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Empty cells before first day
+            for (let i = 0; i < startWeekday; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'date-cell';
+                grid.appendChild(empty);
+            }
+
+            // Day cells
+            for (let d = 1; d <= lastDay.getDate(); d++) {
+                const cell = document.createElement('div');
+                cell.className = 'date-cell';
+                cell.textContent = d;
+
+                const cellDate = new Date(currentYear, currentMonth, d);
+                const dateStr = cellDate.getFullYear() + '-' +
+                    String(cellDate.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(cellDate.getDate()).padStart(2, '0');
+
+                if (cellDate < today) {
+                    // past date — grey
+                } else if (availableDates.includes(dateStr)) {
+                    cell.classList.add('available');
+                    if (dateStr === selectedDate) {
+                        cell.classList.add('selected');
+                    }
+                    cell.onclick = function () {
+                        window.location.href = '/booking/book/' + doctorId + '?date=' + dateStr;
+                    };
+                }
+
+                if (cellDate.toDateString() === today.toDateString()) {
+                    cell.classList.add('today');
+                }
+
+                grid.appendChild(cell);
+            }
+        }
+
+        document.getElementById('prevMonth').onclick = function () {
+            currentMonth--;
+            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            renderCalendar();
+        };
+
+        document.getElementById('nextMonth').onclick = function () {
+            currentMonth++;
+            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            renderCalendar();
+        };
+
+        initCalendar();
+    </script>
+</body>
+</html>

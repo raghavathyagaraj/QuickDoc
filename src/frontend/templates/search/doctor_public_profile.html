@@ -379,7 +379,7 @@
         <div class="book-cta">
             <h3>Ready to book an appointment?</h3>
             <p>Schedule a visit with Dr. {{ doctor.last_name }} — {{ doctor.avg_appointment_duration }} min appointments available</p>
-            <a href="#" class="btn-book-large">
+            <a href="{{ url_for('booking.view_available_slots', doctor_id=doctor.id) }}" class="btn-book-large">
                 <i class="far fa-calendar-plus"></i> Book Appointment
             </a>
         </div>

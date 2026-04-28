@@ -70,5 +70,8 @@ def create_app():
     
     from src.backend.routes.provider import provider_bp
     app.register_blueprint(provider_bp, url_prefix="/provider")
+
+    from src.backend.routes.booking import booking_bp
+    app.register_blueprint(booking_bp, url_prefix="/booking")
     
     return app

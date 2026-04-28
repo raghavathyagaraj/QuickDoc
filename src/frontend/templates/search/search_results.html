@@ -275,7 +275,7 @@
                                class="btn-view">
                                 <i class="fas fa-user"></i> View Profile
                             </a>
-                            <a href="#" class="btn-book">
+                            <a href="{{ url_for('booking.view_available_slots', doctor_id=item.doctor.id) }}" class="btn-book">
                                 <i class="far fa-calendar-plus"></i> Book Appointment
                             </a>
                         </div>
