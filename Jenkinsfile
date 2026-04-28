@@ -75,7 +75,7 @@ pipeline {
             steps {
                 sh '''
                     . venv/bin/activate
-                    pip install flake8 bandit --quiet
+                    pip install flake8 bandit pbr --quiet
                     flake8 src/ --max-line-length=120 --exclude=venv --statistics || true
                     bandit -r src/ -ll || true
                     echo "✅ Code quality checks completed"
@@ -169,14 +169,24 @@ print('✅ Database integration config verified')
                 script {
                     if (env.ENV_NAME == 'QA') {
                         def notes = readFile('release-notes/qa.md').trim()
-                        def safeNotes = notes.replaceAll('[^a-zA-Z0-9 \\-\\n.,:/+*_|#]', '').replaceAll('\n', '\\n')
-                        def header = "QA Release Notes - Build ${BUILD_NUMBER} - Branch ${GIT_BRANCH} - URL http://${TARGET_IP}\\n\\n"
-                        def payload = '{"text":"' + header + safeNotes + '"}'
+                        def message = "QA Release Notes - Build ${BUILD_NUMBER} - Branch ${GIT_BRANCH} - URL http://${TARGET_IP}\n\n${notes}"
+
+                        def payload = groovy.json.JsonOutput.toJson([text: message])
                         writeFile file: 'slack_payload.json', text: payload
-                        sh 'curl -X POST -H "Content-type: application/json" -d @slack_payload.json $SLACK_WEBHOOK'
+
+                        sh '''
+                            curl -X POST -H "Content-type: application/json" \
+                            -d @slack_payload.json $SLACK_WEBHOOK
+                        '''
                     } else {
-                        sh """curl -X POST -H 'Content-type: application/json' \
-                        --data '{"text":"✅ *QuickDoc DEV Deployment Success!*\\n*Build:* #${BUILD_NUMBER}\\n*Branch:* ${GIT_BRANCH}\\n*URL:* http://${TARGET_IP}"}' \$SLACK_WEBHOOK"""
+                        def message = "✅ QuickDoc DEV Deployment Success!\nBuild: #${BUILD_NUMBER}\nBranch: ${GIT_BRANCH}\nURL: http://${TARGET_IP}"
+                        def payload = groovy.json.JsonOutput.toJson([text: message])
+                        writeFile file: 'slack_payload.json', text: payload
+
+                        sh '''
+                            curl -X POST -H "Content-type: application/json" \
+                            -d @slack_payload.json $SLACK_WEBHOOK
+                        '''
                     }
                 }
             }
@@ -185,8 +195,16 @@ print('✅ Database integration config verified')
         failure {
             echo "❌ Pipeline failed!"
             withCredentials([string(credentialsId: "${env.SLACK_URL_ID}", variable: 'SLACK_WEBHOOK')]) {
-                sh """curl -X POST -H 'Content-type: application/json' \
-                --data '{"text":"❌ *QuickDoc Build Failed!*\\n*Project:* ${JOB_NAME}\\n*Build:* #${BUILD_NUMBER}\\n*Env:* ${ENV_NAME}\\n\\nPlease check Jenkins logs immediately."}' \$SLACK_WEBHOOK"""
+                script {
+                    def message = "❌ QuickDoc Build Failed!\nProject: ${JOB_NAME}\nBuild: #${BUILD_NUMBER}\nEnv: ${ENV_NAME}\n\nCheck Jenkins logs immediately."
+                    def payload = groovy.json.JsonOutput.toJson([text: message])
+                    writeFile file: 'slack_payload.json', text: payload
+
+                    sh '''
+                        curl -X POST -H "Content-type: application/json" \
+                        -d @slack_payload.json $SLACK_WEBHOOK
+                    '''
+                }
             }
         }
     }
