@@ -170,7 +170,7 @@ print('✅ Database integration config verified')
                     if (env.ENV_NAME == 'QA') {
                         def notes = readFile('release-notes/qa.md').trim()
                         def header = "*QA Release Notes - Build #${BUILD_NUMBER}*\n*Branch:* ${GIT_BRANCH} | *URL:* http://${TARGET_IP}\n\n"
-                        def fullMessage = (header + notes).replaceAll('"', '\\\\"').replaceAll('\n', '\\\\n')
+                        def fullMessage = (header + notes).replaceAll('"', '\\\\"').replaceAll('\n', '\\\\n').replaceAll("\\(", "").replaceAll("\\)", "")
                         sh """curl -X POST -H 'Content-type: application/json' \
                         --data '{"text":"${fullMessage}"}' \$SLACK_WEBHOOK"""
                     } else {
