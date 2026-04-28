@@ -168,25 +168,23 @@ print('✅ Database integration config verified')
             withCredentials([string(credentialsId: "${env.SLACK_URL_ID}", variable: 'SLACK_WEBHOOK')]) {
                 script {
                     if (env.ENV_NAME == 'QA') {
-                        // Read QA release notes from release-notes/qa.md
+                        // Read QA release notes
                         def releaseNotes = ""
                         if (fileExists('release-notes/qa.md')) {
                             releaseNotes = readFile('release-notes/qa.md')
-                            // Take first 800 characters to avoid message length issues
-                            releaseNotes = releaseNotes.take(800)
-                            // Escape for JSON
+                            releaseNotes = releaseNotes.take(600)
                             releaseNotes = releaseNotes.replaceAll('"', '\\\\"').replaceAll('\n', '\\\\n').replaceAll('\r', '')
                         } else {
                             releaseNotes = "No release notes available"
                         }
                         
-                        // Create JSON payload file
                         def payload = """{
     "text": "✅ *QuickDoc QA Deployment Success!*\\n*Build:* #${BUILD_NUMBER}\\n*Branch:* ${GIT_BRANCH}\\n*URL:* http://${TARGET_IP}\\n\\n*Release Notes:*\\n${releaseNotes}"
 }"""
                         writeFile file: 'slack_payload.json', text: payload
                         
-                        sh 'curl -X POST -H "Content-type: application/json" --data @slack_payload.json \$SLACK_WEBHOOK'
+                        // Use double quotes to expand SLACK_WEBHOOK variable
+                        sh "curl -X POST -H 'Content-type: application/json' --data @slack_payload.json ${SLACK_WEBHOOK}"
                         
                     } else {
                         // DEV deployment
@@ -195,7 +193,7 @@ print('✅ Database integration config verified')
 }"""
                         writeFile file: 'slack_payload.json', text: payload
                         
-                        sh 'curl -X POST -H "Content-type: application/json" --data @slack_payload.json \$SLACK_WEBHOOK'
+                        sh "curl -X POST -H 'Content-type: application/json' --data @slack_payload.json ${SLACK_WEBHOOK}"
                     }
                 }
             }
@@ -210,7 +208,7 @@ print('✅ Database integration config verified')
 }"""
                     writeFile file: 'slack_payload.json', text: payload
                     
-                    sh 'curl -X POST -H "Content-type: application/json" --data @slack_payload.json \$SLACK_WEBHOOK'
+                    sh "curl -X POST -H 'Content-type: application/json' --data @slack_payload.json ${SLACK_WEBHOOK}"
                 }
             }
         }
