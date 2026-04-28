@@ -3,7 +3,7 @@ Team 4 : QuickDoc
 Date: April 2026
 
 ==========================================================
-1. View Available Slots (03.01)
+1. View Available Slots 03.01
    Crosscuts: Core+GUI, ET-In, DS, AS, CN, DF-In, DF-Out, CA, ADT, ExHL
 ==========================================================
 
@@ -11,10 +11,10 @@ Crosscut Implementation:
 - Core+GUI: Booking page with interactive JavaScript calendar on left and time slot grid on right. Doctor header shows name, specialty, fee and location. Green highlighted dates indicate availability.
 - ET-In: Route /booking/book/<doctor_id> requires @login_required, patient role only. Doctors redirected to doctor dashboard.
 - DS: Doctor specialty displayed in header badge. Slot duration fixed at 30 minutes per industry standard.
-- AS: 30-minute appointment slots auto-generated from doctor's weekly recurring schedule template (04.02). Slots generated for next 6 months (180 days).
+- AS: 30-minute appointment slots auto-generated from doctor's weekly recurring schedule template 04.02. Slots generated for next 6 months 180 days.
 - CN: Slots saved to appointment_slots table with doctor_id FK, schedule_id FK, slot_date, start_time, end_time. Unique constraint on doctor + date + time.
 - DF-In: Receives doctor_id from doctor profile Book Appointment button or search results Book button.
-- DF-Out: Selected slot feeds into booking confirmation page (03.02).
+- DF-Out: Selected slot feeds into booking confirmation page 03.02.
 - CA: Slots generated in bulk using bulk_save_objects. Existing slots checked via set lookup to avoid duplicates. Available dates loaded as distinct query for calendar.
 - ADT: Every slot view logged with action=VIEW_AVAILABLE_SLOTS, doctor_id, selected date, slots count, IP address.
 - ExHL: Doctor with no schedule shows warning "Doctor has not set availability yet" and redirects to profile. Invalid date defaults to tomorrow. Past slots not shown. DB errors caught with try/except.
@@ -35,7 +35,7 @@ QA Test Cases:
 - Audit log shows VIEW_AVAILABLE_SLOTS entry
 
 ==========================================================
-2. Book Appointment (03.02)
+2. Book Appointment 03.02
    Crosscuts: Core+GUI, ET-In, CS, AS, FV, DDV, CC, CN, TZ, DF-In, DF-Out, ADT, CA, ExHL
 ==========================================================
 
@@ -46,7 +46,7 @@ Crosscut Implementation:
 - AS: Slot marked as is_booked=True immediately after booking. Booked slots no longer appear in available slots list. Appointment status set to "confirmed" on creation.
 - FV: Slot ownership verified — slot must belong to the correct doctor. Slot must not be already booked. Slot must be in the future — past slots rejected. Notes field optional, max 500 characters.
 - DDV: Patient cannot book two appointments at the same date and time. System checks for conflicting confirmed/pending appointments before allowing booking.
-- CC: Unique constraint uq_patient_slot on (patient_id, slot_id) prevents duplicate bookings at DB level.
+- CC: Unique constraint uq_patient_slot on patient_id, slot_id prevents duplicate bookings at DB level.
 - CN: Appointment saved to appointments table with patient_id, doctor_id, slot_id, appt_datetime, status, notes. Slot is_booked flag updated in same transaction.
 - TZ: Appointment datetime stored as UTC. Displayed in 12-hour AM/PM format on all pages.
 - DF-In: Receives doctor_id and slot_id from slot selection on view slots page.
@@ -111,10 +111,10 @@ QA Test Cases:
 ==========================================================
 5. Database Changes
 ==========================================================
-- New table: appointment_slots (slot_id PK, doctor_id FK, schedule_id FK, slot_date, start_time, end_time, is_booked, created_at)
-- Unique constraint: uq_doctor_date_time on (doctor_id, slot_date, start_time)
-- New table: appointments (appointment_id PK, patient_id FK, doctor_id FK, slot_id FK, appt_datetime, status, notes, created_at, updated_at)
-- Unique constraint: uq_patient_slot on (patient_id, slot_id)
+- New table: appointment_slots slot_id PK, doctor_id FK, schedule_id FK, slot_date, start_time, end_time, is_booked, created_at
+- Unique constraint: uq_doctor_date_time on doctor_id, slot_date, start_time
+- New table: appointments appointment_id PK, patient_id FK, doctor_id FK, slot_id FK, appt_datetime, status, notes, created_at, updated_at
+- Unique constraint: uq_patient_slot on patient_id, slot_id
 - Patient model: added appointments relationship
 - Doctor model: added slots and appointments relationships
 - Schedule model: added slots relationship
