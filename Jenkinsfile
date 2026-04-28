@@ -169,10 +169,11 @@ print('✅ Database integration config verified')
                 script {
                     if (env.ENV_NAME == 'QA') {
                         def notes = readFile('release-notes/qa.md').trim()
-                        def header = "*QA Release Notes - Build #${BUILD_NUMBER}*\n*Branch:* ${GIT_BRANCH} | *URL:* http://${TARGET_IP}\n\n"
-                        def fullMessage = (header + notes).replaceAll('"', '\\\\"').replaceAll('\n', '\\\\n').replaceAll("\\(", "").replaceAll("\\)", "")
-                        sh """curl -X POST -H 'Content-type: application/json' \
-                        --data '{"text":"${fullMessage}"}' \$SLACK_WEBHOOK"""
+                        def safeNotes = notes.replaceAll('[^a-zA-Z0-9 \\-\\n.,:/+*_|#]', '').replaceAll('\n', '\\n')
+                        def header = "QA Release Notes - Build ${BUILD_NUMBER} - Branch ${GIT_BRANCH} - URL http://${TARGET_IP}\\n\\n"
+                        def payload = '{"text":"' + header + safeNotes + '"}'
+                        writeFile file: 'slack_payload.json', text: payload
+                        sh 'curl -X POST -H "Content-type: application/json" -d @slack_payload.json $SLACK_WEBHOOK'
                     } else {
                         sh """curl -X POST -H 'Content-type: application/json' \
                         --data '{"text":"✅ *QuickDoc DEV Deployment Success!*\\n*Build:* #${BUILD_NUMBER}\\n*Branch:* ${GIT_BRANCH}\\n*URL:* http://${TARGET_IP}"}' \$SLACK_WEBHOOK"""
