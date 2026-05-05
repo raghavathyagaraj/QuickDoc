@@ -1,120 +1,206 @@
-QA Release Notes - Sprint 3 Week 1
-Team 4 : QuickDoc
-Date: April 2026
+QA Release Notes - Sprint 3 Week 2
+Team 4 - QuickDoc
+Date - May 2026
 
-==========================================================
-1. View Available Slots (03.01)
-   Crosscuts: Core+GUI, ET-In, DS, AS, CN, DF-In, DF-Out, CA, ADT, ExHL
-==========================================================
+----------------------------------------------------------
+1. Reschedule Booking - 03.03
+   Crosscuts - Core+GUI, ET-In, CS, AS, FV, DDV, CC, CN, TZ, DF-In, DF-Out, ADT, CA, ExHL
+----------------------------------------------------------
 
-Crosscut Implementation:
-- Core+GUI: Booking page with interactive JavaScript calendar on left and time slot grid on right. Doctor header shows name, specialty, fee and location. Green highlighted dates indicate availability.
-- ET-In: Route /booking/book/<doctor_id> requires @login_required, patient role only. Doctors redirected to doctor dashboard.
-- DS: Doctor specialty displayed in header badge. Slot duration fixed at 30 minutes per industry standard.
-- AS: 30-minute appointment slots auto-generated from doctor's weekly recurring schedule template (04.02). Slots generated for next 6 months (180 days).
-- CN: Slots saved to appointment_slots table with doctor_id FK, schedule_id FK, slot_date, start_time, end_time. Unique constraint on doctor + date + time.
-- DF-In: Receives doctor_id from doctor profile Book Appointment button or search results Book button.
-- DF-Out: Selected slot feeds into booking confirmation page (03.02).
-- CA: Slots generated in bulk using bulk_save_objects. Existing slots checked via set lookup to avoid duplicates. Available dates loaded as distinct query for calendar.
-- ADT: Every slot view logged with action=VIEW_AVAILABLE_SLOTS, doctor_id, selected date, slots count, IP address.
-- ExHL: Doctor with no schedule shows warning "Doctor has not set availability yet" and redirects to profile. Invalid date defaults to tomorrow. Past slots not shown. DB errors caught with try/except.
+Crosscut Implementation
+- Core+GUI - Two page reschedule flow. First page shows current appointment details with two options - Same Doctor Different Time or Switch to Different Doctor. Second page shows calendar with available slots for the selected doctor. Patient clicks a slot to confirm reschedule instantly.
+- ET-In - All reschedule routes require login and patient role only. Doctors redirected to doctor dashboard. Ownership verified - patient can only reschedule their own appointments.
+- CS - Reschedule tied to patient profile via patient_id FK. Each patient manages their own appointments independently.
+- AS - Old slot marked as is_booked=False when rescheduled freeing it for other patients. New slot marked as is_booked=True immediately. Appointment status remains confirmed after reschedule.
+- FV - Only confirmed or pending appointments can be rescheduled. Cannot reschedule within 24 hours of appointment time. New slot must be in the future. New slot must not already be booked.
+- DDV - System checks if new slot was booked by someone else between page load and confirmation. Race condition handled with is_booked check before commit.
+- CC - Unique constraint uq_patient_slot prevents duplicate booking at DB level.
+- CN - Appointment record updated with new doctor_id, slot_id and appt_datetime in single atomic transaction. Old slot and new slot updated in same commit.
+- TZ - All times displayed in 12-hour AM/PM format. Stored as UTC in database.
+- DF-In - Receives appointment_id from booking history page. Receives new slot_id from reschedule slot picker.
+- DF-Out - Updated appointment visible in booking history. Notifications sent to both patient and doctor.
+- ADT - Reschedule logged with action=RESCHEDULE_APPOINTMENT including old date, new date, old doctor_id, new doctor_id and IP address.
+- CA - Slots generated in bulk if not already existing. Available dates loaded as distinct query for calendar.
+- ExHL - All DB errors caught with session rollback. Invalid appointment_id returns 404. Unauthorized access returns flash error. Already booked slot shows warning message.
 
-QA Test Cases:
-- Login as patient — click Book Appointment on doctor profile — booking page loads
-- Click Book Appointment on search results page — booking page loads
-- Calendar shows green dates where doctor has availability
-- Click a green date — time slots update on right side
-- Time slots show in 30-minute intervals e.g. 9:00 AM, 9:30 AM, 10:00 AM
-- Click Prev/Next month buttons — calendar navigates correctly
-- Past dates shown as grey and not clickable
-- Dates with no availability not highlighted
-- Doctor with no schedule — warning message shown, redirected to profile
-- Non-patient users redirected to their dashboard
-- Doctor header shows correct name, specialty badge and consultation fee
-- Existing appointments with this doctor shown as warning at top
-- Audit log shows VIEW_AVAILABLE_SLOTS entry
+QA Test Cases
+- Login as patient - go to booking history - click Reschedule on a confirmed appointment
+- Reschedule page shows current appointment details correctly
+- Click Same Doctor Different Time - calendar loads with available dates
+- Click a green date - available 30 min slots shown
+- Click a slot - appointment rescheduled immediately with success message
+- Old slot now available for other patients to book
+- New slot no longer appears in available slots
+- Booking history shows updated date and time
+- Notification received - Appointment Rescheduled
+- Doctor also receives notification about reschedule
+- Try rescheduling appointment less than 24 hours away - error shown
+- Try rescheduling a cancelled appointment - error shown
+- Click Switch to Different Doctor - redirected to search page
+- Audit log shows RESCHEDULE_APPOINTMENT with old and new details
+- Non patient users blocked from rescheduling
 
-==========================================================
-2. Book Appointment (03.02)
-   Crosscuts: Core+GUI, ET-In, CS, AS, FV, DDV, CC, CN, TZ, DF-In, DF-Out, ADT, CA, ExHL
-==========================================================
+----------------------------------------------------------
+2. Cancel Booking - 03.04
+   Crosscuts - Core+GUI, ET-In, CS, AS, FV, CN, DF-In, DF-Out, ADT, ExHL
+----------------------------------------------------------
 
-Crosscut Implementation:
-- Core+GUI: Three-page booking flow — Select Slot → Confirm Details → Success Page. Confirmation page shows doctor name, specialty, date, time, duration, location, consultation fee and optional notes field. Success page shows green checkmark with all appointment details and appointment ID.
-- ET-In: All booking routes require @login_required, patient role only. Doctor role redirected.
-- CS: Appointment tied to patient profile via patient_id FK. Each patient books independently.
-- AS: Slot marked as is_booked=True immediately after booking. Booked slots no longer appear in available slots list. Appointment status set to "confirmed" on creation.
-- FV: Slot ownership verified — slot must belong to the correct doctor. Slot must not be already booked. Slot must be in the future — past slots rejected. Notes field optional, max 500 characters.
-- DDV: Patient cannot book two appointments at the same date and time. System checks for conflicting confirmed/pending appointments before allowing booking.
-- CC: Unique constraint uq_patient_slot on (patient_id, slot_id) prevents duplicate bookings at DB level.
-- CN: Appointment saved to appointments table with patient_id, doctor_id, slot_id, appt_datetime, status, notes. Slot is_booked flag updated in same transaction.
-- TZ: Appointment datetime stored as UTC. Displayed in 12-hour AM/PM format on all pages.
-- DF-In: Receives doctor_id and slot_id from slot selection on view slots page.
-- DF-Out: Confirmed appointment visible on patient dashboard Upcoming Appointments section. Appointment data available for doctor dashboard in future sprint.
-- ADT: Booking logged with action=BOOK_APPOINTMENT, appointment_id, doctor_id, slot_date, start_time, end_time, IP address.
-- CA: Slot availability checked with single query. Transaction commits appointment and slot update atomically.
-- ExHL: Already booked slot shows warning "This slot was just booked by another patient". Invalid slot_id returns 404. Slot not belonging to doctor returns error. Past slot returns error. DB errors caught with session rollback. All errors shown as flash messages.
+Crosscut Implementation
+- Core+GUI - Cancel confirmation page with red warning icon. Shows appointment details including doctor name, date, time and current status. Warning box states action cannot be undone. Optional reason for cancellation textarea. Two buttons - Keep Appointment and Cancel Appointment.
+- ET-In - Cancel routes require login and patient role only. Ownership verified - patient can only cancel their own appointments.
+- CS - Cancellation tied to patient profile. Each patient cancels independently.
+- AS - Slot marked as is_booked=False when cancelled. Slot becomes available for other patients immediately. Appointment status changed to cancelled.
+- FV - Only confirmed or pending appointments can be cancelled. Cannot cancel within 24 hours of appointment time. Cancellation reason optional with max 500 characters.
+- CN - Appointment status updated to cancelled and slot is_booked set to False in single atomic DB transaction.
+- DF-In - Receives appointment_id from booking history page Reschedule or Cancel buttons.
+- DF-Out - Cancelled appointment visible in booking history under Cancelled tab. Notifications sent to both patient and doctor about cancellation.
+- ADT - Cancellation logged with action=CANCEL_APPOINTMENT including doctor_id, appointment date, cancellation reason and IP address.
+- ExHL - All DB errors caught with session rollback. Invalid appointment_id returns 404. Unauthorized access returns flash error. Already cancelled appointment shows warning.
 
-QA Test Cases:
-- Click a time slot on booking page — confirmation page loads
-- Confirmation page shows correct doctor name, specialty, date, time, duration
-- Consultation fee displayed correctly
-- Patient name shown correctly
-- Type optional notes — saves correctly
-- Click Confirm Booking — success page shown with green checkmark
-- Appointment ID displayed on success page
-- Go to Dashboard button works — redirects to patient dashboard
-- View Doctor button works — redirects to doctor profile
-- After booking — slot no longer appears in available slots list
-- Try booking same slot again — error "This slot has already been booked"
-- Try booking slot at same time as existing appointment — error "You already have an appointment at this time"
-- Try booking a past slot — error "Cannot book a slot in the past"
-- Non-patient users blocked from booking
-- Audit log shows BOOK_APPOINTMENT entry with correct details
+QA Test Cases
+- Login as patient - go to booking history - click Cancel on a confirmed appointment
+- Cancel confirmation page shows correct doctor name, date, time and status
+- Warning message displayed - This action cannot be undone
+- Type optional cancellation reason
+- Click Cancel Appointment - appointment cancelled with success message
+- Booking history shows appointment with Cancelled status badge
+- Cancelled tab count increases by 1
+- Upcoming tab count decreases by 1
+- The time slot is now available for other patients to book
+- Patient receives Appointment Cancelled notification
+- Doctor receives notification about cancellation
+- Try cancelling appointment less than 24 hours away - error Cannot cancel within 24 hours
+- Try cancelling an already cancelled appointment - error shown
+- Click Keep Appointment - redirected back to booking history without cancelling
+- Audit log shows CANCEL_APPOINTMENT with reason and details
+- Non patient users blocked from cancelling
 
-==========================================================
-3. Patient Dashboard — Upcoming Appointments Section
-   Crosscuts: Core+GUI, CN, DF-Out, CA
-==========================================================
+----------------------------------------------------------
+3. View Booking History - 03.05
+   Crosscuts - Core+GUI, ET-In, CS, CN, DF-In, DF-Out, ADT, CA, ExHL
+----------------------------------------------------------
 
-Crosscut Implementation:
-- Core+GUI: New Upcoming Appointments section added between My Favorite Doctors and Recent Activity. Each appointment shows doctor name, specialty, date, time and status with teal dot indicator. Stats row updated — Payment Method replaced with Upcoming Appointments count.
-- CN: Appointments loaded via joined query across appointments, doctors, doctor_specialties and appointment_slots tables. Filtered for future confirmed/pending appointments only.
-- DF-Out: View link on each appointment navigates to doctor public profile.
-- CA: Limited to 5 upcoming appointments for performance. Count query separate for stats card.
+Crosscut Implementation
+- Core+GUI - Full appointment history page with tab filters - All, Upcoming, Past, Cancelled. Each tab shows count badge. Each appointment card shows date calendar icon, doctor name, specialty, time range, clinic location and status badge color coded as green for Confirmed, yellow for Pending, red for Cancelled, blue for Completed. Upcoming appointments show Reschedule and Cancel action buttons. Empty state with link to find a doctor.
+- ET-In - History route requires login and patient role only. Doctors redirected.
+- CS - History filtered by patient_id. Each patient sees only their own appointments.
+- CN - Joined query across appointments, doctors, doctor_specialties and appointment_slots tables. Filtered by status based on selected tab. Ordered by appointment datetime descending showing newest first.
+- DF-In - Receives status filter from URL query parameter. Links from patient dashboard upcoming appointments section.
+- DF-Out - Reschedule button links to reschedule flow. Cancel button links to cancel confirmation. View Doctor button links to doctor public profile.
+- ADT - Every history view logged with action=VIEW_BOOKING_HISTORY including filter type and IP address.
+- CA - Separate count queries for each tab to show badge counts. Main query limited to selected filter for performance.
+- ExHL - Patient profile not found returns flash error. Empty results show friendly empty state message.
 
-QA Test Cases:
-- Login as patient with booked appointments — Upcoming Appointments section visible
-- Stats card shows correct upcoming appointment count
-- Each appointment shows doctor name, specialty, date, time and status
-- View link navigates to correct doctor profile
-- Empty state shown when no upcoming appointments — "Book your first appointment" link works
-- Activity log shows "Booked an appointment" and "Viewed available slots" actions
-- Past appointments do not appear in upcoming section
-- Cancelled appointments do not appear in upcoming section
+QA Test Cases
+- Login as patient - navigate to /booking/history
+- All tab shows total count of all appointments
+- Upcoming tab shows only future confirmed and pending appointments
+- Past tab shows only past confirmed and completed appointments
+- Cancelled tab shows only cancelled appointments
+- Each tab count badge shows correct number
+- Appointment card shows correct doctor name and specialty
+- Appointment card shows correct date with calendar icon
+- Appointment card shows correct time range
+- Appointment card shows clinic name and city
+- Confirmed appointments show green badge
+- Cancelled appointments show red badge
+- Upcoming appointments show Reschedule, Cancel and View Doctor buttons
+- Past and cancelled appointments do not show Reschedule or Cancel buttons
+- Click Reschedule - navigates to reschedule flow
+- Click Cancel - navigates to cancel confirmation
+- Click View Doctor - navigates to doctor public profile
+- Empty state shown when no appointments exist
+- Empty state shows link to find a doctor
+- Non patient users redirected to their dashboard
+- Audit log shows VIEW_BOOKING_HISTORY entry
 
-==========================================================
-4. Book Appointment Button Fixes
-==========================================================
+----------------------------------------------------------
+4. Send Booking Reminder - 03.06
+   Crosscuts - Core+GUI, ET-In, CS, CN, DF-In, DF-Out, ADT, CA, ExHL
+----------------------------------------------------------
 
-Fixes Applied:
-- Search results page: Book Appointment button now links to /booking/book/<doctor_id> instead of #
-- Doctor public profile page: Book Appointment button now links to /booking/book/<doctor_id> instead of #
-- Patient dashboard: Book Visit quick action now links to /search instead of Coming soon
-- All booking templates: Fixed route name from search.doctor_profile to search.doctor_public_profile
+Crosscut Implementation
+- Core+GUI - Full notifications page showing all in-app notifications. Each notification card shows icon color coded by type - green for booking, red for cancellation, blue for reschedule, yellow for reminder. Shows title, message, timestamp and Mark read button for unread notifications. Unread notifications highlighted with teal left border. Header shows unread count badge. Mark all read button clears all unread notifications at once.
+- ET-In - Notifications route requires login. Users can only see their own notifications. Mark read verifies ownership before updating.
+- CS - Notifications tied to user_id. Each user has independent notification list.
+- CN - Notifications saved to notifications table with user_id FK, title, message, type, is_read flag, optional link. Queries ordered by created_at descending showing newest first. Limited to 20 most recent.
+- DF-In - Notifications automatically created when patient books appointment, reschedules appointment or cancels appointment. Reminder notifications generated for appointments within next 24 hours.
+- DF-Out - Booking confirmation sends notification to patient and doctor. Cancel sends notification to patient and doctor. Reschedule sends notification to patient and doctor. Click notification link navigates to booking history.
+- ADT - Notification creation logged implicitly through booking, cancel and reschedule audit entries.
+- CA - Unread count query separate from main list for header badge. Bulk update for mark all read operation.
+- ExHL - Invalid notification_id returns 404. Unauthorized notification access returns error. All DB errors caught.
 
-QA Test Cases:
-- Search results — click Book Appointment — booking page loads correctly
-- Doctor profile — click Book Appointment — booking page loads correctly
-- Patient dashboard — click Book Visit — search page loads correctly
+Notification Types
+- booking - Sent when appointment is confirmed. Sent to both patient and doctor.
+- cancellation - Sent when appointment is cancelled. Sent to both patient and doctor.
+- reschedule - Sent when appointment is rescheduled. Sent to both patient and new doctor.
+- reminder - Sent 24 hours before appointment. Sent to patient only.
 
-==========================================================
-5. Database Changes
-==========================================================
-- New table: appointment_slots (slot_id PK, doctor_id FK, schedule_id FK, slot_date, start_time, end_time, is_booked, created_at)
-- Unique constraint: uq_doctor_date_time on (doctor_id, slot_date, start_time)
-- New table: appointments (appointment_id PK, patient_id FK, doctor_id FK, slot_id FK, appt_datetime, status, notes, created_at, updated_at)
-- Unique constraint: uq_patient_slot on (patient_id, slot_id)
-- Patient model: added appointments relationship
-- Doctor model: added slots and appointments relationships
-- Schedule model: added slots relationship
+QA Test Cases
+- Book an appointment - check notifications page - booking notification appears
+- Cancel an appointment - check notifications - cancellation notification appears
+- Reschedule an appointment - check notifications - reschedule notification appears
+- Login as doctor who received a booking - doctor sees notification
+- Unread notifications show teal left border highlight
+- Unread count badge shows correct number in header
+- Click Mark read on a notification - notification no longer highlighted
+- Click Mark all read - all notifications marked as read
+- Unread count badge disappears after marking all read
+- Notification shows correct icon - green calendar for booking, red X for cancel, blue arrows for reschedule, yellow bell for reminder
+- Notification shows correct title, message and timestamp
+- Empty state shown when no notifications exist
+- Non logged in users redirected to login page
+- User can only see their own notifications
+- Try marking another users notification as read - error shown
+
+----------------------------------------------------------
+5. Patient Dashboard Updates
+----------------------------------------------------------
+
+Updates Made
+- Upcoming Appointments section links to booking history
+- Book Visit button links to search page
+- Activity log shows RESCHEDULE_APPOINTMENT and CANCEL_APPOINTMENT actions
+- Notifications bell icon can be added to navbar linking to /booking/notifications
+
+----------------------------------------------------------
+6. Database Changes
+----------------------------------------------------------
+- New table - notifications with columns notification_id PK, user_id FK, title, message, type, is_read, link, created_at
+- User model - added notifications relationship
+- No changes to existing tables - all Sprint 3 Week 1 tables remain unchanged
+
+----------------------------------------------------------
+7. New Routes Added
+----------------------------------------------------------
+- GET /booking/history - View all appointments with tab filters - 03.05
+- GET /booking/reschedule/appointment_id - Choose reschedule option - 03.03
+- GET /booking/reschedule/appointment_id/doctor/doctor_id - Pick new slot - 03.03
+- POST /booking/reschedule/appointment_id/confirm/slot_id - Confirm reschedule - 03.03
+- GET /booking/cancel/appointment_id - Cancel confirmation page - 03.04
+- POST /booking/cancel/appointment_id/submit - Submit cancellation - 03.04
+- GET /booking/notifications - View all notifications - 03.06
+- POST /booking/notifications/read/notif_id - Mark notification as read - 03.06
+- POST /booking/notifications/read-all - Mark all notifications as read - 03.06
+
+----------------------------------------------------------
+8. Sprint 3 Week 1 Regression - All Passing
+----------------------------------------------------------
+- 03.01 View Available Slots - working
+- 03.02 Book Appointment - working
+- Patient Dashboard Upcoming Appointments - working
+- Book Appointment button on search results - working
+- Book Appointment button on doctor profile - working
+
+----------------------------------------------------------
+9. Sprint 2 Regression - All Passing
+----------------------------------------------------------
+- Search by Specialty - working
+- Search by Location - working
+- Search by Name - working
+- Add to Favorites - working
+- View Doctor Profile - working
+- Submit Review - working
+- Doctor Profile Edit - working
+- Schedule Management - working
+- Homepage Dynamic Reviews - working
