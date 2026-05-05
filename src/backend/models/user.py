@@ -263,3 +263,39 @@ class AuditLog(db.Model):
 
     def __repr__(self):
         return f"<AuditLog {self.action} by user_id={self.user_id}>"
+
+
+class Notification(db.Model):
+    """03.06 Send Booking Reminder — in-app notifications."""
+    __tablename__ = "notifications"
+
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    title      = db.Column(db.String(200), nullable=False)
+    message    = db.Column(db.Text, nullable=False)
+    type       = db.Column(db.String(50), nullable=False, default="reminder")
+    is_read    = db.Column(db.Boolean, default=False)
+    link       = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship("User", backref="notifications", lazy=True)
+
+    def __repr__(self):
+        return f"<Notification user={self.user_id} type={self.type}>"
+
+
+class Notification(db.Model):
+    """03.06 Send Booking Reminder — in-app notifications."""
+    __tablename__ = "notifications"
+
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    title      = db.Column(db.String(200), nullable=False)
+    message    = db.Column(db.Text, nullable=False)
+    type       = db.Column(db.String(50), default="reminder")
+    is_read    = db.Column(db.Boolean, default=False)
+    link       = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<Notification user={self.user_id} title={self.title}>"
