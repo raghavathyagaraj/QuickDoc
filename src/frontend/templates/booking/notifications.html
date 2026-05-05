@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - QuickDoc</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { --primary:#0D9488; --primary-dark:#0F766E; --primary-light:#CCFBF1; }
+        body { font-family:'Inter',sans-serif; background:#F9FAFB; min-height:100vh; }
+        .navbar { display:flex; justify-content:space-between; align-items:center; padding:1rem 5%; background:white; border-bottom:1px solid #E5E7EB; position:sticky; top:0; z-index:100; }
+        .logo { display:flex; align-items:center; gap:0.5rem; text-decoration:none; }
+        .logo-icon { width:32px; height:32px; background:var(--primary); border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; }
+        .logo-text { font-size:1.25rem; font-weight:700; color:#111827; }
+        .back-link { color:var(--primary); text-decoration:none; font-size:0.875rem; font-weight:500; display:flex; align-items:center; gap:0.5rem; }
+        .main { max-width:700px; margin:2rem auto; padding:0 1.5rem; }
+        .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; }
+        .page-title { font-size:1.5rem; font-weight:700; color:#111827; }
+        .unread-badge { background:var(--primary); color:white; padding:0.2rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:600; }
+        .mark-all { background:none; border:1px solid #E5E7EB; border-radius:8px; padding:0.4rem 1rem; font-size:0.8rem; font-weight:500; color:#6B7280; cursor:pointer; font-family:'Inter',sans-serif; }
+        .mark-all:hover { border-color:var(--primary); color:var(--primary); }
+        .notif-card { background:white; border-radius:12px; box-shadow:0 1px 6px rgba(0,0,0,0.05); padding:1rem 1.25rem; margin-bottom:0.75rem; display:flex; gap:1rem; align-items:flex-start; border-left:4px solid transparent; transition:all 0.2s; }
+        .notif-card.unread { border-left-color:var(--primary); background:#F0FDFA; }
+        .notif-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1rem; }
+        .notif-icon.booking { background:#D1FAE5; color:#059669; }
+        .notif-icon.cancellation { background:#FEE2E2; color:#EF4444; }
+        .notif-icon.reschedule { background:#EFF6FF; color:#1D4ED8; }
+        .notif-icon.reminder { background:#FEF3C7; color:#D97706; }
+        .notif-icon.info { background:#F3F4F6; color:#6B7280; }
+        .notif-content { flex:1; }
+        .notif-title { font-size:0.9rem; font-weight:600; color:#111827; margin-bottom:0.2rem; }
+        .notif-message { font-size:0.8rem; color:#6B7280; line-height:1.4; }
+        .notif-time { font-size:0.7rem; color:#9CA3AF; margin-top:0.4rem; }
+        .notif-action { flex-shrink:0; }
+        .notif-action form { display:inline; }
+        .read-btn { background:none; border:none; color:var(--primary); cursor:pointer; font-size:0.75rem; font-weight:500; font-family:'Inter',sans-serif; }
+        .read-btn:hover { text-decoration:underline; }
+        .empty-state { text-align:center; padding:3rem; color:#9CA3AF; }
+        .empty-state i { font-size:3rem; display:block; margin-bottom:1rem; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo"><div class="logo-icon"><i class="fas fa-plus"></i></div><span class="logo-text">QuickDoc</span></a>
+        <a href="{{ url_for('dashboard.patient_dashboard') }}" class="back-link"><i class="fas fa-arrow-left"></i> Dashboard</a>
+    </nav>
+    <div class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for category, message in messages %}
+        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.875rem 1rem;border-radius:10px;font-size:0.875rem;font-weight:500;margin-bottom:1rem;{% if category == 'success' %}background:#D1FAE5;color:#065F46;{% else %}background:#FEE2E2;color:#991B1B;{% endif %}">
+            <i class="fas fa-check-circle"></i> {{ message }}
+        </div>
+        {% endfor %}{% endif %}{% endwith %}
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Notifications {% if unread_count > 0 %}<span class="unread-badge">{{ unread_count }} new</span>{% endif %}</h1>
+            </div>
+            {% if unread_count > 0 %}
+            <form method="POST" action="{{ url_for('booking.mark_all_read') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="mark-all"><i class="fas fa-check-double"></i> Mark all read</button>
+            </form>
+            {% endif %}
+        </div>
+
+        {% if notifications %}
+            {% for notif in notifications %}
+            <div class="notif-card {% if not notif.is_read %}unread{% endif %}">
+                <div class="notif-icon {{ notif.type }}">
+                    {% if notif.type == 'booking' %}<i class="fas fa-calendar-check"></i>
+                    {% elif notif.type == 'cancellation' %}<i class="fas fa-times-circle"></i>
+                    {% elif notif.type == 'reschedule' %}<i class="fas fa-exchange-alt"></i>
+                    {% elif notif.type == 'reminder' %}<i class="fas fa-bell"></i>
+                    {% else %}<i class="fas fa-info-circle"></i>{% endif %}
+                </div>
+                <div class="notif-content">
+                    <div class="notif-title">{{ notif.title }}</div>
+                    <div class="notif-message">{{ notif.message }}</div>
+                    <div class="notif-time"><i class="far fa-clock"></i> {{ notif.created_at.strftime('%b %d, %Y at %I:%M %p') }}</div>
+                </div>
+                {% if not notif.is_read %}
+                <div class="notif-action">
+                    <form method="POST" action="{{ url_for('booking.mark_notification_read', notif_id=notif.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="read-btn">Mark read</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="far fa-bell-slash"></i>
+                <p>No notifications yet. You will receive notifications when you book, reschedule or cancel appointments.</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

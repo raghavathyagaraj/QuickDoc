@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cancel Appointment - QuickDoc</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { --primary:#0D9488; --primary-dark:#0F766E; --primary-light:#CCFBF1; }
+        body { font-family:'Inter',sans-serif; background:#F9FAFB; min-height:100vh; }
+        .navbar { display:flex; justify-content:space-between; align-items:center; padding:1rem 5%; background:white; border-bottom:1px solid #E5E7EB; position:sticky; top:0; z-index:100; }
+        .logo { display:flex; align-items:center; gap:0.5rem; text-decoration:none; }
+        .logo-icon { width:32px; height:32px; background:var(--primary); border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; }
+        .logo-text { font-size:1.25rem; font-weight:700; color:#111827; }
+        .back-link { color:var(--primary); text-decoration:none; font-size:0.875rem; font-weight:500; display:flex; align-items:center; gap:0.5rem; }
+        .main { max-width:600px; margin:2rem auto; padding:0 1.5rem; }
+        .card { background:white; border-radius:16px; box-shadow:0 1px 8px rgba(0,0,0,0.05); padding:2rem; }
+        .warning-icon { text-align:center; margin-bottom:1rem; }
+        .warning-icon i { font-size:3rem; color:#EF4444; }
+        .card-title { font-size:1.25rem; font-weight:700; color:#111827; text-align:center; margin-bottom:1.5rem; }
+        .detail-row { display:flex; justify-content:space-between; padding:0.75rem 0; border-bottom:1px solid #F3F4F6; }
+        .detail-row:last-of-type { border-bottom:none; }
+        .detail-label { font-size:0.85rem; color:#6B7280; }
+        .detail-value { font-size:0.85rem; font-weight:600; color:#111827; }
+        .reason-group { margin-top:1.25rem; }
+        .reason-label { display:block; font-size:0.8rem; font-weight:600; color:#374151; margin-bottom:0.375rem; }
+        .reason-input { width:100%; padding:0.75rem 1rem; border:1.5px solid #E5E7EB; border-radius:10px; font-size:0.875rem; font-family:'Inter',sans-serif; resize:vertical; min-height:80px; outline:none; }
+        .reason-input:focus { border-color:var(--primary); }
+        .warning-box { background:#FEF2F2; border:1px solid #FECACA; border-radius:10px; padding:1rem; margin-top:1rem; font-size:0.8rem; color:#991B1B; text-align:center; }
+        .btn-row { display:flex; gap:1rem; margin-top:1.5rem; }
+        .btn { padding:0.875rem 1.5rem; border-radius:10px; font-size:0.9rem; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; border:none; display:inline-flex; align-items:center; justify-content:center; gap:0.5rem; flex:1; text-decoration:none; text-align:center; }
+        .btn-danger { background:#EF4444; color:white; }
+        .btn-danger:hover { background:#DC2626; }
+        .btn-secondary { background:#F3F4F6; color:#374151; }
+        .btn-secondary:hover { background:#E5E7EB; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo"><div class="logo-icon"><i class="fas fa-plus"></i></div><span class="logo-text">QuickDoc</span></a>
+        <a href="{{ url_for('booking.booking_history') }}" class="back-link"><i class="fas fa-arrow-left"></i> Back</a>
+    </nav>
+    <div class="main">
+        <div class="card">
+            <div class="warning-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <h2 class="card-title">Cancel Appointment?</h2>
+            <div class="detail-row"><span class="detail-label">Doctor</span><span class="detail-value">{{ doctor.full_name }}</span></div>
+            <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">{{ slot.slot_date.strftime('%A, %B %d, %Y') }}</span></div>
+            <div class="detail-row"><span class="detail-label">Time</span><span class="detail-value">{{ slot.start_time.strftime('%I:%M %p') }} - {{ slot.end_time.strftime('%I:%M %p') }}</span></div>
+            <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value" style="color:#059669;">{{ appointment.status|capitalize }}</span></div>
+
+            <div class="warning-box"><i class="fas fa-info-circle"></i> This action cannot be undone. The time slot will become available for other patients.</div>
+
+            <form method="POST" action="{{ url_for('booking.cancel_submit', appointment_id=appointment.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="reason-group">
+                    <label class="reason-label">Reason for cancellation (optional)</label>
+                    <textarea name="reason" class="reason-input" placeholder="Tell us why you are cancelling..." maxlength="500"></textarea>
+                </div>
+                <div class="btn-row">
+                    <a href="{{ url_for('booking.booking_history') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Keep Appointment</a>
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-times"></i> Cancel Appointment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pick New Slot - QuickDoc</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { --primary:#0D9488; --primary-dark:#0F766E; --primary-light:#CCFBF1; }
+        body { font-family:'Inter',sans-serif; background:#F9FAFB; min-height:100vh; }
+        .navbar { display:flex; justify-content:space-between; align-items:center; padding:1rem 5%; background:white; border-bottom:1px solid #E5E7EB; position:sticky; top:0; z-index:100; }
+        .logo { display:flex; align-items:center; gap:0.5rem; text-decoration:none; }
+        .logo-icon { width:32px; height:32px; background:var(--primary); border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; }
+        .logo-text { font-size:1.25rem; font-weight:700; color:#111827; }
+        .back-link { color:var(--primary); text-decoration:none; font-size:0.875rem; font-weight:500; display:flex; align-items:center; gap:0.5rem; }
+        .main { max-width:1000px; margin:2rem auto; padding:0 1.5rem; }
+        .page-title { font-size:1.25rem; font-weight:700; color:#111827; margin-bottom:0.5rem; }
+        .page-subtitle { font-size:0.875rem; color:#6B7280; margin-bottom:1.5rem; }
+        .booking-layout { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+        .card { background:white; border-radius:16px; box-shadow:0 1px 8px rgba(0,0,0,0.05); padding:1.5rem; }
+        .card-title { font-size:1rem; font-weight:600; color:#111827; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem; }
+        .card-title i { color:var(--primary); }
+        .date-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:0.4rem; }
+        .date-header { font-size:0.7rem; font-weight:600; color:#9CA3AF; text-align:center; padding:0.4rem; }
+        .date-cell { text-align:center; padding:0.5rem; border-radius:8px; font-size:0.8rem; color:#D1D5DB; cursor:default; }
+        .date-cell.available { background:#F0FDF4; color:#065F46; cursor:pointer; font-weight:600; border:1px solid #86EFAC; }
+        .date-cell.available:hover { background:#DCFCE7; border-color:var(--primary); }
+        .date-cell.selected { background:var(--primary)!important; color:white!important; border-color:var(--primary)!important; }
+        .month-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+        .month-nav h3 { font-size:0.95rem; font-weight:600; color:#111827; }
+        .month-btn { background:none; border:1px solid #E5E7EB; border-radius:8px; padding:0.4rem 0.75rem; cursor:pointer; color:#374151; font-size:0.8rem; }
+        .slots-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:0.5rem; }
+        .slot-btn { display:block; text-align:center; padding:0.75rem; border-radius:10px; font-size:0.85rem; font-weight:600; border:1.5px solid #E5E7EB; color:#374151; background:white; cursor:pointer; font-family:'Inter',sans-serif; }
+        .slot-btn:hover { border-color:var(--primary); color:var(--primary); background:var(--primary-light); }
+        .no-slots { text-align:center; padding:2rem; color:#9CA3AF; font-size:0.9rem; }
+        .no-slots i { font-size:2rem; display:block; margin-bottom:0.75rem; }
+        .selected-date-label { font-size:0.9rem; color:#374151; margin-bottom:1rem; font-weight:500; }
+        .selected-date-label strong { color:var(--primary-dark); }
+        @media(max-width:768px) { .booking-layout { grid-template-columns:1fr; } .slots-grid { grid-template-columns:repeat(2,1fr); } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo"><div class="logo-icon"><i class="fas fa-plus"></i></div><span class="logo-text">QuickDoc</span></a>
+        <a href="{{ url_for('booking.reschedule_select', appointment_id=appointment.id) }}" class="back-link"><i class="fas fa-arrow-left"></i> Back</a>
+    </nav>
+    <div class="main">
+        <h1 class="page-title">Reschedule with {{ doctor.full_name }}</h1>
+        <p class="page-subtitle">Pick a new date and time slot for your appointment.</p>
+
+        <div class="booking-layout">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-calendar-alt"></i> Select New Date</div>
+                <div class="month-nav">
+                    <button class="month-btn" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                    <h3 id="monthLabel"></h3>
+                    <button class="month-btn" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="date-grid" id="calendarGrid">
+                    <div class="date-header">Sun</div><div class="date-header">Mon</div><div class="date-header">Tue</div>
+                    <div class="date-header">Wed</div><div class="date-header">Thu</div><div class="date-header">Fri</div><div class="date-header">Sat</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-clock"></i> Available Slots</div>
+                <div class="selected-date-label">Showing slots for: <strong>{{ selected_date.strftime('%A, %B %d, %Y') }}</strong></div>
+                {% if available_slots %}
+                <div class="slots-grid">
+                    {% for slot in available_slots %}
+                    <form method="POST" action="{{ url_for('booking.reschedule_confirm', appointment_id=appointment.id, new_slot_id=slot.id) }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="slot-btn">{{ slot.start_time.strftime('%I:%M %p') }}</button>
+                    </form>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="no-slots"><i class="far fa-calendar-times"></i>No available slots for this date.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <script>
+        const availableDates = [{% for d in available_dates %}'{{ d.isoformat() }}',{% endfor %}];
+        const doctorId = {{ doctor.id }};
+        const appointmentId = {{ appointment.id }};
+        const selectedDate = '{{ selected_date.isoformat() }}';
+        let currentYear, currentMonth;
+        function initCalendar() { const s = new Date(selectedDate); currentYear = s.getFullYear(); currentMonth = s.getMonth(); renderCalendar(); }
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const label = document.getElementById('monthLabel');
+            const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            label.textContent = months[currentMonth] + ' ' + currentYear;
+            const headers = grid.querySelectorAll('.date-header');
+            grid.innerHTML = ''; headers.forEach(h => grid.appendChild(h));
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const today = new Date(); today.setHours(0,0,0,0);
+            for (let i = 0; i < firstDay.getDay(); i++) { const e = document.createElement('div'); e.className = 'date-cell'; grid.appendChild(e); }
+            for (let d = 1; d <= lastDay.getDate(); d++) {
+                const cell = document.createElement('div'); cell.className = 'date-cell'; cell.textContent = d;
+                const cd = new Date(currentYear, currentMonth, d);
+                const ds = cd.getFullYear()+'-'+String(cd.getMonth()+1).padStart(2,'0')+'-'+String(cd.getDate()).padStart(2,'0');
+                if (cd < today) {} else if (availableDates.includes(ds)) {
+                    cell.classList.add('available'); if (ds === selectedDate) cell.classList.add('selected');
+                    cell.onclick = function() { window.location.href = '/booking/reschedule/'+appointmentId+'/doctor/'+doctorId+'?date='+ds; };
+                }
+                grid.appendChild(cell);
+            }
+        }
+        document.getElementById('prevMonth').onclick = function() { currentMonth--; if(currentMonth<0){currentMonth=11;currentYear--;} renderCalendar(); };
+        document.getElementById('nextMonth').onclick = function() { currentMonth++; if(currentMonth>11){currentMonth=0;currentYear++;} renderCalendar(); };
+        initCalendar();
+    </script>
+</body>
+</html>

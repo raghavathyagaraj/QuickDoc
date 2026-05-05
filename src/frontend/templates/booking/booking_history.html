@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking History - QuickDoc</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { --primary:#0D9488; --primary-dark:#0F766E; --primary-light:#CCFBF1; }
+        body { font-family:'Inter',sans-serif; background:#F9FAFB; min-height:100vh; }
+        .navbar { display:flex; justify-content:space-between; align-items:center; padding:1rem 5%; background:white; border-bottom:1px solid #E5E7EB; position:sticky; top:0; z-index:100; }
+        .logo { display:flex; align-items:center; gap:0.5rem; text-decoration:none; }
+        .logo-icon { width:32px; height:32px; background:var(--primary); border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; }
+        .logo-text { font-size:1.25rem; font-weight:700; color:#111827; }
+        .back-link { color:var(--primary); text-decoration:none; font-size:0.875rem; font-weight:500; display:flex; align-items:center; gap:0.5rem; }
+        .main { max-width:900px; margin:2rem auto; padding:0 1.5rem; }
+        .page-title { font-size:1.5rem; font-weight:700; color:#111827; margin-bottom:0.5rem; }
+        .page-subtitle { font-size:0.875rem; color:#6B7280; margin-bottom:1.5rem; }
+        .flash { display:flex; align-items:center; gap:0.75rem; padding:0.875rem 1rem; border-radius:10px; font-size:0.875rem; font-weight:500; margin-bottom:1rem; }
+        .flash.success { background:#D1FAE5; color:#065F46; }
+        .flash.danger { background:#FEE2E2; color:#991B1B; }
+        .flash.warning { background:#FEF3C7; color:#92400E; }
+        .tabs { display:flex; gap:0.5rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+        .tab { padding:0.5rem 1.25rem; border-radius:20px; font-size:0.8rem; font-weight:600; text-decoration:none; color:#6B7280; background:white; border:1px solid #E5E7EB; transition:all 0.2s; }
+        .tab:hover { border-color:var(--primary); color:var(--primary); }
+        .tab.active { background:var(--primary); color:white; border-color:var(--primary); }
+        .tab .count { background:rgba(255,255,255,0.3); padding:0.1rem 0.5rem; border-radius:10px; font-size:0.7rem; margin-left:0.3rem; }
+        .tab.active .count { background:rgba(255,255,255,0.3); }
+        .appt-card { background:white; border-radius:14px; box-shadow:0 1px 8px rgba(0,0,0,0.05); padding:1.25rem; margin-bottom:1rem; display:flex; gap:1.25rem; align-items:flex-start; }
+        .appt-date { width:70px; text-align:center; flex-shrink:0; background:var(--primary-light); border-radius:10px; padding:0.75rem 0.5rem; }
+        .appt-date .month { font-size:0.65rem; font-weight:600; color:var(--primary-dark); text-transform:uppercase; }
+        .appt-date .day { font-size:1.5rem; font-weight:700; color:var(--primary-dark); }
+        .appt-date .weekday { font-size:0.6rem; color:var(--primary); }
+        .appt-info { flex:1; }
+        .appt-doctor { font-size:1rem; font-weight:600; color:#111827; margin-bottom:0.25rem; }
+        .appt-specialty { font-size:0.8rem; color:#6B7280; margin-bottom:0.5rem; }
+        .appt-time { font-size:0.8rem; color:#374151; margin-bottom:0.25rem; }
+        .appt-time i { width:16px; color:var(--primary); }
+        .appt-actions { display:flex; gap:0.5rem; margin-top:0.75rem; }
+        .btn-sm { padding:0.4rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem; transition:all 0.2s; border:none; cursor:pointer; font-family:'Inter',sans-serif; }
+        .btn-reschedule { background:#EFF6FF; color:#1D4ED8; }
+        .btn-reschedule:hover { background:#DBEAFE; }
+        .btn-cancel { background:#FEE2E2; color:#991B1B; }
+        .btn-cancel:hover { background:#FECACA; }
+        .btn-view { background:var(--primary-light); color:var(--primary-dark); }
+        .btn-view:hover { background:#B2F5EA; }
+        .status-badge { display:inline-flex; align-items:center; gap:0.25rem; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.7rem; font-weight:600; }
+        .status-confirmed { background:#D1FAE5; color:#065F46; }
+        .status-pending { background:#FEF3C7; color:#92400E; }
+        .status-cancelled { background:#FEE2E2; color:#991B1B; }
+        .status-completed { background:#E0E7FF; color:#3730A3; }
+        .empty-state { text-align:center; padding:3rem; color:#9CA3AF; }
+        .empty-state i { font-size:3rem; margin-bottom:1rem; display:block; }
+        .empty-state a { color:var(--primary); }
+        @media(max-width:640px) { .appt-card { flex-direction:column; } .appt-date { width:100%; display:flex; gap:0.5rem; align-items:center; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo"><div class="logo-icon"><i class="fas fa-plus"></i></div><span class="logo-text">QuickDoc</span></a>
+        <a href="{{ url_for('dashboard.patient_dashboard') }}" class="back-link"><i class="fas fa-arrow-left"></i> Dashboard</a>
+    </nav>
+    <div class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for category, message in messages %}
+        <div class="flash {{ category }}">{% if category == 'success' %}<i class="fas fa-check-circle"></i>{% elif category == 'warning' %}<i class="fas fa-exclamation-triangle"></i>{% else %}<i class="fas fa-exclamation-circle"></i>{% endif %} {{ message }}</div>
+        {% endfor %}{% endif %}{% endwith %}
+
+        <h1 class="page-title">My Appointments</h1>
+        <p class="page-subtitle">View and manage all your appointments.</p>
+
+        <div class="tabs">
+            <a href="?status=all" class="tab {% if status_filter == 'all' %}active{% endif %}">All <span class="count">{{ total_count }}</span></a>
+            <a href="?status=upcoming" class="tab {% if status_filter == 'upcoming' %}active{% endif %}">Upcoming <span class="count">{{ upcoming_count }}</span></a>
+            <a href="?status=past" class="tab {% if status_filter == 'past' %}active{% endif %}">Past <span class="count">{{ past_count }}</span></a>
+            <a href="?status=cancelled" class="tab {% if status_filter == 'cancelled' %}active{% endif %}">Cancelled <span class="count">{{ cancelled_count }}</span></a>
+        </div>
+
+        {% if appointments %}
+            {% for appt, doctor, specialty, slot in appointments %}
+            <div class="appt-card">
+                <div class="appt-date">
+                    <div class="month">{{ appt.appt_datetime.strftime('%b') }}</div>
+                    <div class="day">{{ appt.appt_datetime.strftime('%d') }}</div>
+                    <div class="weekday">{{ appt.appt_datetime.strftime('%a') }}</div>
+                </div>
+                <div class="appt-info">
+                    <div class="appt-doctor">Dr. {{ doctor.first_name }} {{ doctor.last_name }}</div>
+                    <div class="appt-specialty">{% if specialty %}{{ specialty.name }}{% else %}General{% endif %}</div>
+                    <div class="appt-time"><i class="far fa-clock"></i> {{ slot.start_time.strftime('%I:%M %p') }} - {{ slot.end_time.strftime('%I:%M %p') }}</div>
+                    <div class="appt-time"><i class="fas fa-map-marker-alt"></i> {{ doctor.clinic_name if doctor.clinic_name else 'Clinic' }}{% if doctor.city %}, {{ doctor.city }}{% endif %}</div>
+                    <div style="margin-top:0.5rem;">
+                        {% if appt.status == 'confirmed' %}<span class="status-badge status-confirmed"><i class="fas fa-check-circle"></i> Confirmed</span>
+                        {% elif appt.status == 'pending' %}<span class="status-badge status-pending"><i class="fas fa-clock"></i> Pending</span>
+                        {% elif appt.status == 'cancelled' %}<span class="status-badge status-cancelled"><i class="fas fa-times-circle"></i> Cancelled</span>
+                        {% elif appt.status == 'completed' %}<span class="status-badge status-completed"><i class="fas fa-check-double"></i> Completed</span>
+                        {% endif %}
+                    </div>
+                    {% if appt.status in ['confirmed', 'pending'] and appt.appt_datetime > now %}
+                    <div class="appt-actions">
+                        <a href="{{ url_for('booking.reschedule_select', appointment_id=appt.id) }}" class="btn-sm btn-reschedule"><i class="fas fa-calendar-alt"></i> Reschedule</a>
+                        <a href="{{ url_for('booking.cancel_confirm', appointment_id=appt.id) }}" class="btn-sm btn-cancel"><i class="fas fa-times"></i> Cancel</a>
+                        <a href="{{ url_for('search.doctor_public_profile', doctor_id=doctor.id) }}" class="btn-sm btn-view"><i class="fas fa-user-md"></i> View Doctor</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="far fa-calendar-check"></i>
+                <p>No appointments found.<br><a href="{{ url_for('search.search') }}">Find a doctor</a> and book your first appointment!</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
