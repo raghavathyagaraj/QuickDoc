@@ -282,3 +282,23 @@ class Notification(db.Model):
 
     def __repr__(self):
         return f"<Notification user={self.user_id} type={self.type}>"
+
+
+class BlockedDate(db.Model):
+    """04.03 Manage Availability — block specific dates or date ranges."""
+    __tablename__ = "blocked_dates"
+
+    id         = db.Column(db.Integer, primary_key=True)
+    doctor_id  = db.Column(db.Integer, db.ForeignKey("doctors.id"), nullable=False)
+    block_date = db.Column(db.Date, nullable=False)
+    reason     = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    doctor = db.relationship("Doctor", backref="blocked_dates", lazy=True)
+
+    __table_args__ = (
+        db.UniqueConstraint("doctor_id", "block_date", name="uq_doctor_blocked_date"),
+    )
+
+    def __repr__(self):
+        return f"<BlockedDate doctor={self.doctor_id} {self.block_date}>"

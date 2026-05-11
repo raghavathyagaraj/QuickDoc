@@ -1,9 +1,9 @@
 import logging
-from datetime import time
+from datetime import time, date, timedelta, datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from src.backend import db
-from src.backend.models.user import Doctor, DoctorSpecialty, Schedule
+from src.backend.models.user import Doctor, DoctorSpecialty, Schedule, BlockedDate, Review, Patient
 from src.backend.utils.audit import log_audit
 
 logger = logging.getLogger(__name__)
@@ -270,3 +270,203 @@ def delete_schedule_slot(slot_id):
         flash("Something went wrong.", "danger")
 
     return redirect(url_for("provider.manage_schedule"))
+
+
+# ── 04.03 Manage Availability — Block Dates ───────────────────────────────
+
+@provider_bp.route("/availability", methods=["GET"])
+@login_required
+def manage_availability():
+    """ET-In: doctor only. Shows blocked dates and allows adding new blocks."""
+    if current_user.role != "doctor":
+        return redirect(url_for("dashboard.patient_dashboard"))
+
+    doctor = Doctor.query.filter_by(user_id=current_user.id).first()
+    if not doctor:
+        flash("Doctor profile not found.", "danger")
+        return redirect(url_for("dashboard.doctor_dashboard"))
+
+    blocked = BlockedDate.query.filter_by(doctor_id=doctor.id).filter(
+        BlockedDate.block_date >= date.today()
+    ).order_by(BlockedDate.block_date).all()
+
+    past_blocked = BlockedDate.query.filter_by(doctor_id=doctor.id).filter(
+        BlockedDate.block_date < date.today()
+    ).count()
+
+    return render_template("provider/manage_availability.html",
+                           doctor=doctor, blocked_dates=blocked,
+                           past_blocked_count=past_blocked)
+
+
+@provider_bp.route("/availability/block", methods=["POST"])
+@login_required
+def block_date():
+    """FV: date validation. DDV: no duplicate. CC: unique constraint. ADT: logged."""
+    if current_user.role != "doctor":
+        return redirect(url_for("dashboard.patient_dashboard"))
+
+    doctor = Doctor.query.filter_by(user_id=current_user.id).first()
+    if not doctor:
+        flash("Doctor profile not found.", "danger")
+        return redirect(url_for("dashboard.doctor_dashboard"))
+
+    block_type = request.form.get("block_type", "single")
+    start_date_str = request.form.get("block_date", "").strip()
+    end_date_str = request.form.get("end_date", "").strip()
+    reason = request.form.get("reason", "").strip()
+
+    if not start_date_str:
+        flash("Please select a date to block.", "danger")
+        return redirect(url_for("provider.manage_availability"))
+
+    try:
+        start_dt = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+    except ValueError:
+        flash("Invalid date format.", "danger")
+        return redirect(url_for("provider.manage_availability"))
+
+    if start_dt <= date.today():
+        flash("Cannot block a date in the past.", "danger")
+        return redirect(url_for("provider.manage_availability"))
+
+    dates_to_block = [start_dt]
+
+    if block_type == "range" and end_date_str:
+        try:
+            end_dt = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+        except ValueError:
+            flash("Invalid end date format.", "danger")
+            return redirect(url_for("provider.manage_availability"))
+
+        if end_dt <= start_dt:
+            flash("End date must be after start date.", "danger")
+            return redirect(url_for("provider.manage_availability"))
+
+        if (end_dt - start_dt).days > 30:
+            flash("Cannot block more than 30 days at once.", "danger")
+            return redirect(url_for("provider.manage_availability"))
+
+        current_d = start_dt
+        dates_to_block = []
+        while current_d <= end_dt:
+            dates_to_block.append(current_d)
+            current_d += timedelta(days=1)
+
+    try:
+        blocked_count = 0
+        for d in dates_to_block:
+            existing = BlockedDate.query.filter_by(doctor_id=doctor.id, block_date=d).first()
+            if not existing:
+                new_block = BlockedDate(
+                    doctor_id=doctor.id,
+                    block_date=d,
+                    reason=reason if reason else None
+                )
+                db.session.add(new_block)
+                blocked_count += 1
+
+        db.session.commit()
+
+        log_audit(
+            action="BLOCK_DATE",
+            entity_type="availability",
+            entity_id=doctor.id,
+            user_id=current_user.id,
+            details={
+                "dates_blocked": blocked_count,
+                "start": start_date_str,
+                "end": end_date_str if block_type == "range" else start_date_str,
+                "reason": reason,
+                "ip": request.remote_addr
+            }
+        )
+
+        if blocked_count > 0:
+            flash("%d date%s blocked successfully." % (blocked_count, "s" if blocked_count > 1 else ""), "success")
+        else:
+            flash("Selected dates are already blocked.", "warning")
+
+    except Exception as exc:
+        db.session.rollback()
+        logger.error("Block date failed: %s", exc, exc_info=True)
+        flash("Something went wrong. Please try again.", "danger")
+
+    return redirect(url_for("provider.manage_availability"))
+
+
+@provider_bp.route("/availability/unblock/<int:block_id>", methods=["POST"])
+@login_required
+def unblock_date(block_id):
+    """ExHL: ownership verified. ADT: logged."""
+    if current_user.role != "doctor":
+        return redirect(url_for("dashboard.patient_dashboard"))
+
+    doctor = Doctor.query.filter_by(user_id=current_user.id).first()
+    blocked = BlockedDate.query.get_or_404(block_id)
+
+    if blocked.doctor_id != doctor.id:
+        flash("Unauthorized action.", "danger")
+        return redirect(url_for("provider.manage_availability"))
+
+    try:
+        block_date_val = str(blocked.block_date)
+        db.session.delete(blocked)
+        db.session.commit()
+
+        log_audit(
+            action="UNBLOCK_DATE",
+            entity_type="availability",
+            entity_id=block_id,
+            user_id=current_user.id,
+            details={"date": block_date_val, "ip": request.remote_addr}
+        )
+
+        flash("Date unblocked successfully.", "success")
+
+    except Exception as exc:
+        db.session.rollback()
+        logger.error("Unblock date failed: %s", exc, exc_info=True)
+        flash("Something went wrong.", "danger")
+
+    return redirect(url_for("provider.manage_availability"))
+
+
+# ── 05.03 View Reviews — Doctor Reviews Dashboard ────────────────────────
+
+@provider_bp.route("/reviews", methods=["GET"])
+@login_required
+def view_reviews():
+    """ET-In: doctor only. Shows all reviews with stats."""
+    if current_user.role != "doctor":
+        return redirect(url_for("dashboard.patient_dashboard"))
+
+    doctor = Doctor.query.filter_by(user_id=current_user.id).first()
+    if not doctor:
+        flash("Doctor profile not found.", "danger")
+        return redirect(url_for("dashboard.doctor_dashboard"))
+
+    reviews = db.session.query(Review, Patient).join(
+        Patient, Patient.id == Review.patient_id
+    ).filter(
+        Review.doctor_id == doctor.id
+    ).order_by(Review.created_at.desc()).all()
+
+    total = len(reviews)
+    avg_rating = round(sum(r.rating for r, p in reviews) / total, 1) if total > 0 else 0
+    rating_breakdown = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+    for r, p in reviews:
+        rating_breakdown[r.rating] = rating_breakdown.get(r.rating, 0) + 1
+
+    log_audit(
+        action="VIEW_REVIEWS_DASHBOARD",
+        entity_type="doctor",
+        entity_id=doctor.id,
+        user_id=current_user.id,
+        details={"total_reviews": total, "ip": request.remote_addr}
+    )
+
+    return render_template("provider/doctor_reviews.html",
+                           doctor=doctor, reviews=reviews,
+                           total=total, avg_rating=avg_rating,
+                           rating_breakdown=rating_breakdown)
