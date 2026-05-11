@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Reviews - QuickDoc</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { --primary:#0D9488; --primary-dark:#0F766E; --primary-light:#CCFBF1; }
+        body { font-family:'Inter',sans-serif; background:#F9FAFB; min-height:100vh; }
+        .navbar { display:flex; justify-content:space-between; align-items:center; padding:1rem 5%; background:white; border-bottom:1px solid #E5E7EB; position:sticky; top:0; z-index:100; }
+        .logo { display:flex; align-items:center; gap:0.5rem; text-decoration:none; }
+        .logo-icon { width:32px; height:32px; background:var(--primary); border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; }
+        .logo-text { font-size:1.25rem; font-weight:700; color:#111827; }
+        .back-link { color:var(--primary); text-decoration:none; font-size:0.875rem; font-weight:500; display:flex; align-items:center; gap:0.5rem; }
+        .main { max-width:800px; margin:2rem auto; padding:0 1.5rem; }
+        .page-title { font-size:1.5rem; font-weight:700; color:#111827; margin-bottom:0.5rem; }
+        .page-subtitle { font-size:0.875rem; color:#6B7280; margin-bottom:1.5rem; }
+        .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:1.5rem; }
+        .stat-card { background:white; border-radius:12px; padding:1.25rem; box-shadow:0 1px 6px rgba(0,0,0,0.05); text-align:center; }
+        .stat-value { font-size:1.75rem; font-weight:700; color:var(--primary); }
+        .stat-label { font-size:0.75rem; color:#9CA3AF; margin-top:0.25rem; }
+        .stat-stars { color:#F59E0B; font-size:1rem; margin-top:0.25rem; }
+        .card { background:white; border-radius:16px; box-shadow:0 1px 8px rgba(0,0,0,0.05); padding:1.75rem; margin-bottom:1.5rem; }
+        .card-title { font-size:1rem; font-weight:600; color:#111827; margin-bottom:1.25rem; display:flex; align-items:center; gap:0.5rem; padding-bottom:0.75rem; border-bottom:1px solid #F3F4F6; }
+        .card-title i { color:var(--primary); }
+        .breakdown-row { display:flex; align-items:center; gap:0.75rem; margin-bottom:0.6rem; }
+        .breakdown-label { width:50px; font-size:0.8rem; font-weight:600; color:#374151; }
+        .breakdown-bar { flex:1; height:10px; background:#F3F4F6; border-radius:5px; overflow:hidden; }
+        .breakdown-fill { height:100%; border-radius:5px; }
+        .breakdown-fill.star5 { background:#059669; }
+        .breakdown-fill.star4 { background:#10B981; }
+        .breakdown-fill.star3 { background:#F59E0B; }
+        .breakdown-fill.star2 { background:#F97316; }
+        .breakdown-fill.star1 { background:#EF4444; }
+        .breakdown-count { width:30px; font-size:0.75rem; color:#9CA3AF; text-align:right; }
+        .review-card { padding:1.25rem 0; border-bottom:1px solid #F3F4F6; }
+        .review-card:last-child { border-bottom:none; }
+        .review-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem; }
+        .review-patient { font-size:0.9rem; font-weight:600; color:#111827; }
+        .review-date { font-size:0.75rem; color:#9CA3AF; }
+        .review-stars { color:#F59E0B; font-size:0.85rem; margin-bottom:0.4rem; }
+        .review-body { font-size:0.85rem; color:#374151; line-height:1.5; }
+        .empty-state { text-align:center; padding:3rem; color:#9CA3AF; }
+        .empty-state i { font-size:3rem; display:block; margin-bottom:1rem; }
+        @media(max-width:640px) { .stats-row { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo"><div class="logo-icon"><i class="fas fa-plus"></i></div><span class="logo-text">QuickDoc</span></a>
+        <a href="{{ url_for('dashboard.doctor_dashboard') }}" class="back-link"><i class="fas fa-arrow-left"></i> Dashboard</a>
+    </nav>
+    <div class="main">
+        <h1 class="page-title">My Reviews</h1>
+        <p class="page-subtitle">See what patients are saying about you.</p>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value">{{ avg_rating }}</div>
+                <div class="stat-stars">
+                    {% for i in range(5) %}
+                        {% if i < avg_rating|int %}<i class="fas fa-star"></i>{% elif i < avg_rating %}<i class="fas fa-star-half-alt"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+                    {% endfor %}
+                </div>
+                <div class="stat-label">Average Rating</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ total }}</div>
+                <div class="stat-label">Total Reviews</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ rating_breakdown[5] }}</div>
+                <div class="stat-label">5-Star Reviews</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><i class="fas fa-chart-bar"></i> Rating Breakdown</div>
+            {% for star in [5,4,3,2,1] %}
+            <div class="breakdown-row">
+                <div class="breakdown-label">{{ star }} <i class="fas fa-star" style="color:#F59E0B;font-size:0.7rem;"></i></div>
+                <div class="breakdown-bar">
+                    <div class="breakdown-fill star{{ star }}" style="width: {{ (rating_breakdown[star] / total * 100) if total > 0 else 0 }}%"></div>
+                </div>
+                <div class="breakdown-count">{{ rating_breakdown[star] }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="card">
+            <div class="card-title"><i class="fas fa-comments"></i> All Reviews</div>
+            {% if reviews %}
+                {% for review, patient in reviews %}
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="review-patient"><i class="fas fa-user-circle" style="color:var(--primary);"></i> {{ patient.first_name }} {{ patient.last_name[0] }}.</div>
+                        <div class="review-date">{{ review.created_at.strftime('%b %d, %Y') }}</div>
+                    </div>
+                    <div class="review-stars">
+                        {% for i in range(5) %}
+                            {% if i < review.rating %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if review.title %}<div style="font-weight:600;font-size:0.85rem;color:#111827;margin-bottom:0.25rem;">{{ review.title }}</div>{% endif %}
+                    <div class="review-body">{{ review.body }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="far fa-comment-dots"></i>
+                    <p>No reviews yet. Reviews will appear here when patients submit them.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

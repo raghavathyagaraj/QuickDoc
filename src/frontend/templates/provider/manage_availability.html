@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Availability - QuickDoc</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { --primary:#0D9488; --primary-dark:#0F766E; --primary-light:#CCFBF1; }
+        body { font-family:'Inter',sans-serif; background:#F9FAFB; min-height:100vh; }
+        .navbar { display:flex; justify-content:space-between; align-items:center; padding:1rem 5%; background:white; border-bottom:1px solid #E5E7EB; position:sticky; top:0; z-index:100; }
+        .logo { display:flex; align-items:center; gap:0.5rem; text-decoration:none; }
+        .logo-icon { width:32px; height:32px; background:var(--primary); border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; }
+        .logo-text { font-size:1.25rem; font-weight:700; color:#111827; }
+        .back-link { color:var(--primary); text-decoration:none; font-size:0.875rem; font-weight:500; display:flex; align-items:center; gap:0.5rem; }
+        .main { max-width:800px; margin:2rem auto; padding:0 1.5rem; }
+        .page-title { font-size:1.5rem; font-weight:700; color:#111827; margin-bottom:0.5rem; }
+        .page-subtitle { font-size:0.875rem; color:#6B7280; margin-bottom:1.5rem; }
+        .flash { display:flex; align-items:center; gap:0.75rem; padding:0.875rem 1rem; border-radius:10px; font-size:0.875rem; font-weight:500; margin-bottom:1rem; }
+        .flash.success { background:#D1FAE5; color:#065F46; }
+        .flash.danger { background:#FEE2E2; color:#991B1B; }
+        .flash.warning { background:#FEF3C7; color:#92400E; }
+        .card { background:white; border-radius:16px; box-shadow:0 1px 8px rgba(0,0,0,0.05); padding:1.75rem; margin-bottom:1.5rem; }
+        .card-title { font-size:1rem; font-weight:600; color:#111827; margin-bottom:1.25rem; display:flex; align-items:center; gap:0.5rem; padding-bottom:0.75rem; border-bottom:1px solid #F3F4F6; }
+        .card-title i { color:var(--primary); }
+        .form-row { display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap; margin-bottom:1rem; }
+        .form-group { flex:1; min-width:150px; }
+        .form-label { display:block; font-size:0.75rem; font-weight:600; color:#374151; margin-bottom:0.3rem; text-transform:uppercase; }
+        .form-control { width:100%; padding:0.625rem 0.75rem; border:1.5px solid #E5E7EB; border-radius:8px; font-size:0.85rem; font-family:'Inter',sans-serif; outline:none; }
+        .form-control:focus { border-color:var(--primary); }
+        select.form-control { appearance:none; }
+        .btn { padding:0.625rem 1.25rem; border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; border:none; display:inline-flex; align-items:center; gap:0.4rem; }
+        .btn-primary { background:var(--primary); color:white; }
+        .btn-primary:hover { background:var(--primary-dark); }
+        .btn-danger { background:#FEE2E2; color:#991B1B; padding:0.4rem 0.75rem; font-size:0.75rem; border:none; cursor:pointer; border-radius:6px; }
+        .btn-danger:hover { background:#FECACA; }
+        .blocked-list { display:flex; flex-direction:column; gap:0.5rem; }
+        .blocked-item { display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:#FEF2F2; border:1px solid #FECACA; border-radius:10px; }
+        .blocked-date { font-weight:600; color:#991B1B; font-size:0.9rem; }
+        .blocked-reason { font-size:0.8rem; color:#6B7280; margin-top:0.15rem; }
+        .empty-state { text-align:center; padding:2rem; color:#9CA3AF; font-size:0.85rem; }
+        .empty-state i { font-size:2rem; display:block; margin-bottom:0.75rem; }
+        .stats-row { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-bottom:1.5rem; }
+        .stat-card { background:white; border-radius:12px; padding:1.25rem; box-shadow:0 1px 6px rgba(0,0,0,0.05); text-align:center; }
+        .stat-value { font-size:1.5rem; font-weight:700; color:var(--primary); }
+        .stat-label { font-size:0.75rem; color:#9CA3AF; margin-top:0.25rem; }
+        .toggle-row { display:flex; gap:0.5rem; margin-bottom:1rem; }
+        .toggle-btn { padding:0.4rem 1rem; border-radius:20px; font-size:0.8rem; font-weight:500; border:1px solid #E5E7EB; background:white; color:#6B7280; cursor:pointer; }
+        .toggle-btn.active { background:var(--primary); color:white; border-color:var(--primary); }
+        @media(max-width:640px) { .form-row { flex-direction:column; } .stats-row { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo"><div class="logo-icon"><i class="fas fa-plus"></i></div><span class="logo-text">QuickDoc</span></a>
+        <a href="{{ url_for('dashboard.doctor_dashboard') }}" class="back-link"><i class="fas fa-arrow-left"></i> Dashboard</a>
+    </nav>
+    <div class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for category, message in messages %}
+        <div class="flash {{ category }}">{% if category == 'success' %}<i class="fas fa-check-circle"></i>{% elif category == 'warning' %}<i class="fas fa-exclamation-triangle"></i>{% else %}<i class="fas fa-exclamation-circle"></i>{% endif %} {{ message }}</div>
+        {% endfor %}{% endif %}{% endwith %}
+
+        <h1 class="page-title">Manage Availability</h1>
+        <p class="page-subtitle">Block specific dates when you are unavailable. Patients will not be able to book on blocked dates.</p>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value">{{ blocked_dates|length }}</div>
+                <div class="stat-label">Upcoming Blocked Dates</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ past_blocked_count }}</div>
+                <div class="stat-label">Past Blocked Dates</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><i class="fas fa-calendar-times"></i> Block Date</div>
+            <form method="POST" action="{{ url_for('provider.block_date') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="toggle-row">
+                    <button type="button" class="toggle-btn active" onclick="setBlockType('single', this)">Single Date</button>
+                    <button type="button" class="toggle-btn" onclick="setBlockType('range', this)">Date Range</button>
+                </div>
+                <input type="hidden" name="block_type" id="block_type" value="single">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" name="block_date" class="form-control" required min="{{ today }}">
+                    </div>
+                    <div class="form-group" id="end_date_group" style="display:none;">
+                        <label class="form-label">End Date</label>
+                        <input type="date" name="end_date" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reason - optional</label>
+                        <input type="text" name="reason" class="form-control" placeholder="e.g. Vacation, Conference" maxlength="255">
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-ban"></i> Block</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><i class="fas fa-list"></i> Blocked Dates</div>
+            {% if blocked_dates %}
+            <div class="blocked-list">
+                {% for bd in blocked_dates %}
+                <div class="blocked-item">
+                    <div>
+                        <div class="blocked-date"><i class="fas fa-calendar-times"></i> {{ bd.block_date.strftime('%A, %B %d, %Y') }}</div>
+                        {% if bd.reason %}<div class="blocked-reason">{{ bd.reason }}</div>{% endif %}
+                    </div>
+                    <form method="POST" action="{{ url_for('provider.unblock_date', block_id=bd.id) }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-danger"><i class="fas fa-undo"></i> Unblock</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="far fa-calendar-check"></i>
+                No dates blocked. You are available on all scheduled days.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+        function setBlockType(type, btn) {
+            document.getElementById('block_type').value = type;
+            document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('end_date_group').style.display = type === 'range' ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>
